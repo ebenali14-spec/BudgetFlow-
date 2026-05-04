@@ -5,6 +5,8 @@ import com.example.backend.dtos.RepartionResponseDTO;
 import com.example.backend.dtos.RepartionRequestDTO;
 import com.example.backend.entities.PeriodeBudgetaire;
 import org.springframework.stereotype.Service;
+import com.example.backend.entities.Utilisateur;
+import com.example.backend.repos.PeriodeRepo;
 
 import java.util.HashMap;
 import java.util.List;
@@ -79,19 +81,36 @@ public class PeriodeService implements IPeriodeService {
     }
 
     @Override
-    public PeriodeBudgetaire createPeriode(PeriodeDTO p) {
-        return null;
-    }
+public PeriodeBudgetaire createPeriode(PeriodeDTO dto) {
+    PeriodeBudgetaire p = new PeriodeBudgetaire();
+    p.setDateDebut(dto.getDateDebut());
+    p.setDateFin(dto.getDateFin());
+    p.setBudgetTotal(dto.getBudgetTotal());
+    p.setStatut(dto.getStatut());
+    p.setEstSimulation(dto.isEstSimulation());
+    Utilisateur u = new Utilisateur();
+    u.setId(dto.getUtilisateurId());
+    p.setUtilisateur(u);
+    return periodeRepo.save(p);
+}
 
-    @Override
-    public Boolean deletePeriode(Long idPeriod) {
-        return null;
-    }
+   @Override
+public Boolean deletePeriode(Long idPeriode) {
+    periodeRepo.deleteById(idPeriode);
+    return true;
+}
 
-    @Override
-    public PeriodeBudgetaire modifyPeriode(PeriodeDTO p) {
-        return null;
-    }
+   @Override
+public PeriodeBudgetaire modifyPeriode(PeriodeDTO dto) {
+    PeriodeBudgetaire p = periodeRepo.findById(dto.getId())
+            .orElseThrow(() -> new RuntimeException("Période introuvable"));
+    p.setDateDebut(dto.getDateDebut());
+    p.setDateFin(dto.getDateFin());
+    p.setBudgetTotal(dto.getBudgetTotal());
+    p.setStatut(dto.getStatut());
+    p.setEstSimulation(dto.isEstSimulation());
+    return periodeRepo.save(p);
+}
 
     @Override
     public RepartionResponseDTO calculerRepartition(RepartionRequestDTO dto) {
@@ -117,17 +136,17 @@ public class PeriodeService implements IPeriodeService {
 
     }
     @Override
-    public List<PeriodeBudgetaire> getAllPlansByUser(Long idUser) {
-        return List.of();
-    }
+public List<PeriodeBudgetaire> getAllPlansByUser(Long idUser) {
+    return periodeRepo.findByUtilisateurIdAndEstSimulation(idUser, true);
+}
+@Override
+public List<PeriodeBudgetaire> getPeriodesByUser(Long idUser) {
+    return periodeRepo.findByUtilisateurIdAndEstSimulation(idUser, false);
+}
 
-    @Override
-    public List<PeriodeBudgetaire> getPeriodesByUser(Long idUser) {
-        return List.of();
-    }
-
-    @Override
-    public PeriodeBudgetaire getPeriodeById(Long id) {
-        return null;
-    }
+@Override
+public PeriodeBudgetaire getPeriodeById(Long id) {
+    return periodeRepo.findById(id)
+            .orElseThrow(() -> new RuntimeException("Période introuvable"));
+}
 }

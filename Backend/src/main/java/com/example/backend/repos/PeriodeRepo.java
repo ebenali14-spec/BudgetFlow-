@@ -6,4 +6,10 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface PeriodeRepo extends JpaRepository<PeriodeBudgetaire,Long> {
+     List<PeriodeBudgetaire> findByUtilisateurId(Long utilisateurId);
+
+    List<PeriodeBudgetaire> findByUtilisateurIdAndEstSimulation(Long utilisateurId, boolean estSimulation);
+    
+
+
 }
