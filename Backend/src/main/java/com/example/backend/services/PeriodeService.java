@@ -4,6 +4,7 @@ import com.example.backend.dtos.PeriodeDTO;
 import com.example.backend.dtos.RepartionResponseDTO;
 import com.example.backend.dtos.RepartionRequestDTO;
 import com.example.backend.entities.PeriodeBudgetaire;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.example.backend.entities.Utilisateur;
 import com.example.backend.repos.PeriodeRepo;
@@ -13,6 +14,8 @@ import java.util.List;
 import java.util.Map;
 @Service
 public class PeriodeService implements IPeriodeService {
+    @Autowired
+    PeriodeRepo periodeRepo;
     private static final Map<String, Integer> SCORES=new HashMap<>();
     static {
         SCORES.put("LOGEMENT_ETUDIANT_PROPRIETAIRE", 35);
