@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { PeriodeBudgetaire } from '../models/periode.model';
@@ -7,9 +7,9 @@ import { PeriodeBudgetaire } from '../models/periode.model';
   providedIn: 'root'
 })
 export class PeriodeService {
-  private apiUrl = '/periodes';
+  private apiUrl = 'http://localhost:8090/periodes';
 
-  constructor(private http: HttpClient) {}
+ private readonly http:HttpClient=inject(HttpClient)
 
   getPeriodesByUser(userId: number): Observable<PeriodeBudgetaire[]> {
     return this.http.get<PeriodeBudgetaire[]>(`${this.apiUrl}/user/${userId}`);
@@ -20,11 +20,11 @@ export class PeriodeService {
   }
 
   createPeriode(periode: any): Observable<PeriodeBudgetaire> {
-    return this.http.post<PeriodeBudgetaire>(`${this.apiUrl}/create`, periode);
+    return this.http.post<PeriodeBudgetaire>(`${this.apiUrl}`, periode);
   }
 
   updatePeriode(periode: any): Observable<PeriodeBudgetaire> {
-    return this.http.put<PeriodeBudgetaire>(`${this.apiUrl}/update`, periode);
+    return this.http.put<PeriodeBudgetaire>(`${this.apiUrl}`, periode);
   }
 
   deletePeriode(id: number): Observable<boolean> {

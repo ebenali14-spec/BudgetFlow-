@@ -5,4 +5,5 @@
   budgetTotal: number;
   statut: string;
   estSimulation: boolean;
+    utilisateurId?: number;
 }

@@ -21,7 +21,11 @@ public class PeriodeController {
         RepartionResponseDTO reponse = periodeService.calculerRepartition(requestDTO);
         return ResponseEntity.ok(reponse);
     }
-    @PostMapping("/create")
+    @GetMapping("/{id:\\d+}")
+    public ResponseEntity<PeriodeBudgetaire> getPeriodeById(@PathVariable Long id) {
+        return ResponseEntity.ok(periodeService.getPeriodeById(id));
+    }
+    @PostMapping()
 public ResponseEntity<PeriodeBudgetaire> createPeriode(@RequestBody PeriodeDTO dto) {
     return ResponseEntity.ok(periodeService.createPeriode(dto));
 }
@@ -31,7 +35,7 @@ public ResponseEntity<Boolean> deletePeriode(@PathVariable Long id) {
     return ResponseEntity.ok(periodeService.deletePeriode(id));
 }
 
-@PutMapping("/update")
+@PutMapping()
 public ResponseEntity<PeriodeBudgetaire> updatePeriode(@RequestBody PeriodeDTO dto) {
     return ResponseEntity.ok(periodeService.modifyPeriode(dto));
 }
@@ -41,10 +45,6 @@ public ResponseEntity<List<PeriodeBudgetaire>> getPeriodesByUser(@PathVariable L
     return ResponseEntity.ok(periodeService.getPeriodesByUser(idUser));
 }
 
-@GetMapping("/{id}")
-public ResponseEntity<PeriodeBudgetaire> getPeriodeById(@PathVariable Long id) {
-    return ResponseEntity.ok(periodeService.getPeriodeById(id));
-}
 @GetMapping("/simulations/{idUser}")
     public ResponseEntity<List<PeriodeBudgetaire>> getSimulationsByUser(@PathVariable Long idUser) {
         return ResponseEntity.ok(periodeService.getAllPlansByUser(idUser));
