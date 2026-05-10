@@ -18,6 +18,7 @@ public class PeriodeService implements IPeriodeService {
     PeriodeRepo periodeRepo;
     private static final Map<String, Integer> SCORES=new HashMap<>();
     static {
+        // categories default
         SCORES.put("LOGEMENT_ETUDIANT_PROPRIETAIRE", 35);
         SCORES.put("LOGEMENT_ETUDIANT_LOCATAIRE", 30);
         SCORES.put("LOGEMENT_ETUDIANT_COLOCATION", 20);
@@ -81,6 +82,22 @@ public class PeriodeService implements IPeriodeService {
         SCORES.put("SANTE_SEUL_BONNE", 5);
         SCORES.put("SANTE_SEUL_COURANTE", 12);
         SCORES.put("SANTE_SEUL_ELEVEE", 22);
+
+        // categories persoo
+        // fréquence
+        SCORES.put("CUSTOM_RAREMENT", 5);
+        SCORES.put("CUSTOM_PARFOIS", 15);
+        SCORES.put("CUSTOM_SOUVENT", 28);
+
+// essentialité
+        SCORES.put("CUSTOM_OPTIONNELLE", 5);
+        SCORES.put("CUSTOM_UTILE", 15);
+        SCORES.put("CUSTOM_ESSENTIELLE", 30);
+
+// montant
+        SCORES.put("CUSTOM_FAIBLE", 5);
+        SCORES.put("CUSTOM_MOYEN", 15);
+        SCORES.put("CUSTOM_ELEVE", 28);
     }
 
     @Override
@@ -115,28 +132,45 @@ public PeriodeBudgetaire modifyPeriode(PeriodeDTO dto) {
     return periodeRepo.save(p);
 }
 
+
     @Override
     public RepartionResponseDTO calculerRepartition(RepartionRequestDTO dto) {
         Map<String, Integer> scoresCategories = new HashMap<>();
+
         for (String reponse : dto.getReponses()) {
-            Integer score = SCORES.get(reponse);
-            if (score != null) {
-                String categorie = reponse.split("_")[0];
-                scoresCategories.put(categorie, score);
+            // catégorie par défaut    => "LOGEMENT_ETUDIANT_LOCATAIRE"
+            // catégorie personnalisée => "Animaux_CUSTOM_SOUVENT_CUSTOM_ESSENTIELLE_CUSTOM_MOYEN"
+
+            if (reponse.contains("CUSTOM")) {
+                String[] parts = reponse.split("_CUSTOM_");
+                String nomCategorie = parts[0];
+                int score = 0;
+                for (int i = 1; i < parts.length; i++) {
+                    Integer s = SCORES.get("CUSTOM_" + parts[i]);
+                    if (s != null) score += s;
+                }
+                scoresCategories.put(nomCategorie, score);
+            } else {
+                Integer score = SCORES.get(reponse);
+                if (score != null) {
+                    String categorie = reponse.split("_")[0];
+                    scoresCategories.put(categorie, score);
+                }
             }
         }
+
         int totalScores = scoresCategories.values().stream().mapToInt(Integer::intValue).sum();
         Map<String, Double> pourcentages = new HashMap<>();
         Map<String, Double> montants = new HashMap<>();
+
         for (Map.Entry<String, Integer> entry : scoresCategories.entrySet()) {
             double pct = Math.round(entry.getValue() * 1000.0 / totalScores) / 10.0;
             double montant = Math.round(pct * dto.getBudgetTotal()) / 100.0;
             pourcentages.put(entry.getKey(), pct);
             montants.put(entry.getKey(), montant);
         }
-        return new RepartionResponseDTO(pourcentages,montants);
 
-
+        return new RepartionResponseDTO(pourcentages, montants);
     }
     @Override
 public List<PeriodeBudgetaire> getAllPlansByUser(Long idUser) {
@@ -153,3 +187,4 @@ public PeriodeBudgetaire getPeriodeById(Long id) {
             .orElseThrow(() -> new RuntimeException("Période introuvable"));
 }
 }
+

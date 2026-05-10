@@ -3,8 +3,9 @@ package com.example.backend.dtos;
 import java.util.List;
 
 public class RepartionRequestDTO {
-    private List<String> reponses;
+    private List<String> reponses; // default et perso
     private Double budgetTotal;
+
 
     public List<String> getReponses() {
         return reponses;
