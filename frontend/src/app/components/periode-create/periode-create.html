@@ -1,14 +1,13 @@
 <div class="bf-create-page">
-
-  <!-- Back link -->
+  <!-- Back -->
   <a routerLink="/periodes" class="bf-back-link">
     <i class="bi bi-arrow-left"></i> Retour à la liste
   </a>
 
   <!-- Header -->
   <div class="bf-create-header">
-    <div class="">
-      <i class="bi bi-cash-coin"><i class="bi bi-cash-coin"></i> </i>
+    <div class="bf-create-icon">
+      <i class="bi bi-calendar-plus"></i>
     </div>
     <div>
       <h1 class="bf-create-title">Nouvelle période</h1>
@@ -16,9 +15,9 @@
     </div>
   </div>
 
-  <!-- Card form -->
   <div class="bf-form-card">
 
+    <!-- Erreur API métier -->
     @if (erreur) {
       <div class="bf-alert-error">
         <i class="bi bi-exclamation-triangle-fill"></i> {{ erreur }}
@@ -31,36 +30,26 @@
         <label class="bf-label" for="dateDebut">
           <i class="bi bi-calendar-event"></i> Date de début
         </label>
-        <input
-          id="dateDebut"
-          type="date"
-          class="bf-input"
-          [(ngModel)]="form.dateDebut"
-          [class.is-invalid]="submitted && !form.dateDebut"
-        />
+        <input id="dateDebut" type="date" class="bf-input"
+               [(ngModel)]="form.dateDebut"
+               [class.is-invalid]="submitted && !form.dateDebut" />
         @if (submitted && !form.dateDebut) {
           <span class="bf-field-error">Champ requis</span>
         }
       </div>
-
       <div class="bf-form-group">
         <label class="bf-label" for="dateFin">
           <i class="bi bi-calendar-check"></i> Date de fin
         </label>
-        <input
-          id="dateFin"
-          type="date"
-          class="bf-input"
-          [(ngModel)]="form.dateFin"
-          [class.is-invalid]="submitted && !form.dateFin"
-        />
+        <input id="dateFin" type="date" class="bf-input"
+               [(ngModel)]="form.dateFin"
+               [class.is-invalid]="submitted && !form.dateFin" />
         @if (submitted && !form.dateFin) {
           <span class="bf-field-error">Champ requis</span>
         }
       </div>
     </div>
 
-    <!-- Durée calculée (live) -->
     @if (dureeCalculee > 0) {
       <div class="bf-duree-preview">
         <i class="bi bi-hourglass-split"></i>
@@ -74,15 +63,10 @@
         <i class="bi bi-cash-coin"></i> Budget total
       </label>
       <div class="bf-input-addon-wrap">
-        <input
-          id="budget"
-          type="number"
-          class="bf-input bf-input-addon"
-          [(ngModel)]="form.budgetTotal"
-          placeholder="ex: 3000"
-          min="1"
-          [class.is-invalid]="submitted && (!form.budgetTotal || form.budgetTotal <= 0)"
-        />
+        <input id="budget" type="number" class="bf-input bf-input-addon"
+               [(ngModel)]="form.budgetTotal"
+               placeholder="ex: 3000" min="1"
+               [class.is-invalid]="submitted && (!form.budgetTotal || form.budgetTotal <= 0)" />
         <span class="bf-addon">DT</span>
       </div>
       @if (submitted && (!form.budgetTotal || form.budgetTotal <= 0)) {
@@ -90,36 +74,72 @@
       }
     </div>
 
-    <!-- Statut -->
-    <div class="bf-form-group">
-      <label class="bf-label" for="statut">
-        <i class="bi bi-toggle-on"></i> Statut
-      </label>
-      <select id="statut" class="bf-input" [(ngModel)]="form.statut">
-        <option value="ACTIVE">Active</option>
-        <option value="TERMINEE">Terminée</option>
-        <option value="EN_PAUSE">En pause</option>
-      </select>
-    </div>
-
-    <!-- Simulation toggle -->
+    <!-- Toggle simulation EN PREMIER → conditionne le reste -->
     <div class="bf-form-check">
       <label class="bf-toggle-wrap" for="simulation">
-        <input
-          id="simulation"
-          type="checkbox"
-          class="bf-toggle-input"
-          [(ngModel)]="form.estSimulation"
-        />
+        <input id="simulation" type="checkbox" class="bf-toggle-input"
+               [(ngModel)]="form.estSimulation"
+               (change)="onSimulationChange()" />
         <span class="bf-toggle-track">
           <span class="bf-toggle-thumb"></span>
         </span>
         <span class="bf-toggle-label">
           Il s'agit d'une simulation
-          <small>Les simulations n'affectent pas vos budgets réels</small>
+          <small>Les simulations n'ont pas de statut et n'affectent pas vos budgets réels</small>
         </span>
       </label>
     </div>
+
+    <!-- Statut — masqué si simulation -->
+    @if (!form.estSimulation) {
+      <div class="bf-form-group">
+        <label class="bf-label" for="statut">
+          <i class="bi bi-toggle-on"></i> Statut
+        </label>
+        <div class="bf-statut-group">
+
+          <!-- ACTIVE -->
+          <label class="bf-statut-card" [class.selected]="form.statut === 'ACTIVE'">
+            <input type="radio" name="statut" value="ACTIVE" [(ngModel)]="form.statut" />
+            <span class="bf-statut-dot active"></span>
+            <div>
+              <strong>Active</strong>
+              <small>Période en cours</small>
+            </div>
+          </label>
+
+          <!-- EN_PAUSE — désactivé à la création -->
+          <label class="bf-statut-card disabled" title="Impossible de créer une période en pause">
+            <input type="radio" name="statut" value="EN_PAUSE" disabled />
+            <span class="bf-statut-dot pause"></span>
+            <div>
+              <strong>En pause</strong>
+              <small>Non disponible à la création</small>
+            </div>
+            <span class="bf-lock"><i class="bi bi-lock-fill"></i></span>
+          </label>
+
+     
+
+        </div>
+
+        <!-- Avertissement si ACTIVE déjà prise -->
+        @if (form.statut === 'ACTIVE') {
+          <div class="bf-info-hint">
+            <i class="bi bi-info-circle"></i>
+            Si vous avez déjà une période active, la création sera refusée.
+          </div>
+        }
+      </div>
+    }
+
+    <!-- Info simulation -->
+    @if (form.estSimulation) {
+      <div class="bf-sim-info">
+        <i class="bi bi-bar-chart-line-fill"></i>
+        Mode simulation activé — aucun statut ne sera attribué à cette période.
+      </div>
+    }
 
     <!-- Actions -->
     <div class="bf-form-actions">

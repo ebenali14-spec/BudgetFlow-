@@ -303,3 +303,97 @@
 }
 
 @keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── STATUT RADIO CARDS ──────────────────────────────────────── */
+.bf-statut-group {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-bottom: 0.5rem;
+}
+
+@media (max-width: 500px) {
+  .bf-statut-group { grid-template-columns: 1fr; }
+}
+
+.bf-statut-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border: 1.5px solid var(--bf-border);
+  border-radius: 10px;
+  cursor: pointer;
+  background: #f8fafc;
+  transition: all 0.15s;
+  position: relative;
+}
+
+.bf-statut-card input[type="radio"] { display: none; }
+
+.bf-statut-card:hover:not(.disabled) {
+  border-color: var(--bf-teal);
+  background: #fff;
+}
+
+.bf-statut-card.selected {
+  border-color: var(--bf-navy);
+  background: #eef2f7;
+}
+
+.bf-statut-card.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: #f0f4f8;
+}
+
+.bf-statut-card div { display: flex; flex-direction: column; gap: 1px; }
+.bf-statut-card strong { font-size: 0.82rem; color: var(--bf-text); }
+.bf-statut-card small  { font-size: 0.65rem; color: var(--bf-muted); }
+
+.bf-statut-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.bf-statut-dot.active   { background: #2d7a4f; }
+.bf-statut-dot.pause    { background: #b07800; }
+.bf-statut-dot.terminee { background: var(--bf-muted); }
+
+.bf-lock {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.7rem;
+  color: var(--bf-muted);
+}
+
+/* ── INFO HINTS ──────────────────────────────────────────────── */
+.bf-info-hint {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.72rem;
+  color: #b07800;
+  background: #fff4e0;
+  border: 1px solid #ffe4a0;
+  padding: 7px 12px;
+  border-radius: 8px;
+  margin-top: 6px;
+}
+
+.bf-sim-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #1a56db;
+  background: #e8f0fe;
+  border: 1px solid #bad1fb;
+  padding: 10px 14px;
+  border-radius: 9px;
+  margin-bottom: 1rem;
+}

@@ -5,5 +5,5 @@
   "compilerOptions": {
     "types": ["jasmine", "node"]
   },
-  "include": ["src/**/*.spec.ts", "src/**/*.d.ts"]
+"include": ["src/**/*.ts", "src/**/*.d.ts"]
 }

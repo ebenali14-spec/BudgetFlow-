@@ -1,1 +1,199 @@
-<p>periode-edit works!</p>
+<div class="bf-edit-page">
+
+  <!-- Back -->
+  <a routerLink="/periodes" class="bf-back-link">
+    <i class="bi bi-arrow-left"></i> Retour à la liste
+  </a>
+
+  <!-- Loading skeleton -->
+  @if (loadingData) {
+    <div class="bf-skeleton-header"></div>
+    <div class="bf-skeleton-card">
+      <div class="bf-skeleton-row"></div>
+      <div class="bf-skeleton-row short"></div>
+      <div class="bf-skeleton-row"></div>
+    </div>
+  }
+
+  @if (!loadingData) {
+
+    <!-- Header -->
+    <div class="bf-edit-header">
+      <div class="bf-edit-icon">
+        <i class="bi bi-pencil-square"></i>
+      </div>
+      <div>
+        <h1 class="bf-edit-title">Modifier la période</h1>
+        <p class="bf-edit-sub">
+          Créée le {{ periodeOriginale?.dateDebut }} · ID #{{ form.id }}
+        </p>
+      </div>
+      <!-- Badge statut actuel -->
+      <span class="bf-badge-statut" [ngClass]="{
+        'badge-active':   form.statut === 'ACTIVE',
+        'badge-pause':    form.statut === 'EN_PAUSE',
+        'badge-inactive': form.statut === 'TERMINEE'
+      }">
+        <i class="bi" [ngClass]="{
+          'bi-check-circle-fill': form.statut === 'ACTIVE',
+          'bi-pause-circle-fill': form.statut === 'EN_PAUSE',
+          'bi-x-circle-fill':     form.statut === 'TERMINEE'
+        }"></i>
+        {{ form.statut === 'EN_PAUSE' ? 'En pause' : form.statut === 'TERMINEE' ? 'Terminée' : 'Active' }}
+      </span>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════
+         SECTION : Données de la période
+         ══════════════════════════════════════════════════════ -->
+    <section class="bf-section">
+      <div class="bf-section-label">
+        <i class="bi bi-sliders"></i> Données de la période
+      </div>
+
+      <div class="bf-form-card">
+
+        @if (erreur) {
+          <div class="bf-alert-error">
+            <i class="bi bi-exclamation-triangle-fill"></i> {{ erreur }}
+          </div>
+        }
+
+        <!-- Dates -->
+        <div class="bf-form-row">
+          <div class="bf-form-group">
+            <label class="bf-label" for="dateDebut">
+              <i class="bi bi-calendar-event"></i> Date de début
+            </label>
+            <input
+              id="dateDebut"
+              type="date"
+              class="bf-input"
+              [(ngModel)]="form.dateDebut"
+              [class.is-invalid]="submitted && !form.dateDebut"
+            />
+            @if (submitted && !form.dateDebut) {
+              <span class="bf-field-error">Champ requis</span>
+            }
+          </div>
+
+          <div class="bf-form-group">
+            <label class="bf-label" for="dateFin">
+              <i class="bi bi-calendar-check"></i> Date de fin
+            </label>
+            <input
+              id="dateFin"
+              type="date"
+              class="bf-input"
+              [(ngModel)]="form.dateFin"
+              [class.is-invalid]="submitted && !form.dateFin"
+            />
+            @if (submitted && !form.dateFin) {
+              <span class="bf-field-error">Champ requis</span>
+            }
+          </div>
+        </div>
+
+        <!-- Durée live -->
+        @if (dureeCalculee > 0) {
+          <div class="bf-duree-preview">
+            <i class="bi bi-hourglass-split"></i>
+            Durée : <strong>{{ dureeCalculee }} jours</strong>
+            @if (dureeChangee) {
+              <span class="bf-duree-diff">
+                ({{ dureeOriginale }}j → {{ dureeCalculee }}j)
+              </span>
+            }
+          </div>
+        }
+
+        <!-- Budget -->
+        <div class="bf-form-group">
+          <label class="bf-label" for="budget">
+            <i class="bi bi-cash-coin"></i> Budget total
+          </label>
+          <div class="bf-input-addon-wrap">
+            <input
+              id="budget"
+              type="number"
+              class="bf-input bf-input-addon"
+              [(ngModel)]="form.budgetTotal"
+              placeholder="ex: 3000"
+              min="1"
+              [class.is-invalid]="submitted && (!form.budgetTotal || form.budgetTotal <= 0)"
+            />
+            <span class="bf-addon">DT</span>
+          </div>
+          @if (submitted && (!form.budgetTotal || form.budgetTotal <= 0)) {
+            <span class="bf-field-error">Entrez un budget positif</span>
+          }
+          <!-- Indication si changement -->
+          @if (periodeOriginale && form.budgetTotal !== periodeOriginale.budgetTotal) {
+            <span class="bf-changed-hint">
+              <i class="bi bi-arrow-left-right"></i>
+              Avant : {{ periodeOriginale.budgetTotal | number:'1.0-0' }} DT
+            </span>
+          }
+        </div>
+
+        <!-- Statut -->
+        <div class="bf-form-group">
+          <label class="bf-label" for="statut">
+            <i class="bi bi-toggle-on"></i> Statut
+          </label>
+          <select id="statut" class="bf-input" [(ngModel)]="form.statut">
+            <option value="ACTIVE">Active</option>
+            <option value="TERMINEE">Terminée</option>
+            <option value="EN_PAUSE">En pause</option>
+          </select>
+        </div>
+
+        <!-- Simulation toggle -->
+        <div class="bf-form-check">
+          <label class="bf-toggle-wrap" for="simulation">
+            <input
+              id="simulation"
+              type="checkbox"
+              class="bf-toggle-input"
+              [(ngModel)]="form.estSimulation"
+            />
+            <span class="bf-toggle-track">
+              <span class="bf-toggle-thumb"></span>
+            </span>
+            <span class="bf-toggle-label">
+              Il s'agit d'une simulation
+              <small>Les simulations n'affectent pas vos budgets réels</small>
+            </span>
+          </label>
+        </div>
+
+        <!-- Actions -->
+        <div class="bf-form-actions">
+          <button class="bf-btn-reset" (click)="reinitialiser()" title="Annuler les modifications">
+            <i class="bi bi-arrow-counterclockwise"></i> Réinitialiser
+          </button>
+          <div class="bf-actions-right">
+            <a routerLink="/periodes" class="bf-btn-secondary">
+              <i class="bi bi-x-lg"></i> Annuler
+            </a>
+            <button class="bf-btn-primary" (click)="sauvegarder()" [disabled]="loading">
+              @if (loading) {
+                <span class="bf-spinner"></span> Sauvegarde...
+              } @else {
+                <i class="bi bi-check-lg"></i> Sauvegarder
+              }
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════
+         ZONE EXTENSIBLE — tu peux ajouter tes sections ici
+         ══════════════════════════════════════════════════════ -->
+
+
+  }
+
+</div>

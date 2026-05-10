@@ -101,18 +101,49 @@ public class PeriodeService implements IPeriodeService {
     }
 
     @Override
-public PeriodeBudgetaire createPeriode(PeriodeDTO dto) {
-    PeriodeBudgetaire p = new PeriodeBudgetaire();
-    p.setDateDebut(dto.getDateDebut());
-    p.setDateFin(dto.getDateFin());
-    p.setBudgetTotal(dto.getBudgetTotal());
-    p.setStatut(dto.getStatut());
-    p.setEstSimulation(dto.isEstSimulation());
-    Utilisateur u = new Utilisateur();
-    u.setId(dto.getUtilisateurId());
-    p.setUtilisateur(u);
-    return periodeRepo.save(p);
-}
+    public PeriodeBudgetaire createPeriode(PeriodeDTO dto) {
+
+        PeriodeBudgetaire p = new PeriodeBudgetaire();
+        p.setDateDebut(dto.getDateDebut());
+        p.setDateFin(dto.getDateFin());
+        p.setBudgetTotal(dto.getBudgetTotal());
+
+        Utilisateur u = new Utilisateur();
+        u.setId(dto.getUtilisateurId());
+        p.setUtilisateur(u);
+
+        if (dto.isEstSimulation()) {
+            // ── Règle 3 : simulation → pas de notion de statut
+            p.setEstSimulation(true);
+            p.setStatut(null);
+
+        } else {
+            // ── Règle 1 : statut ACTIVE → vérifier qu'aucune période réelle active n'existe déjà
+            if ("ACTIVE".equals(dto.getStatut())) {
+                boolean dejaActive = periodeRepo
+                        .findByUtilisateurIdAndStatutAndEstSimulationFalse(
+                                dto.getUtilisateurId(), "ACTIVE")
+                        .isPresent();
+                if (dejaActive) {
+                    throw new RuntimeException(
+                            "Vous avez déjà une période réelle active. " +
+                                    "Désactivez-la avant d'en créer une nouvelle.");
+                }
+            }
+
+            // ── Règle 2 : statut EN_PAUSE interdit à la création
+            if ("EN_PAUSE".equals(dto.getStatut())) {
+                throw new RuntimeException(
+                        "Impossible de créer une période avec le statut 'En pause'. " +
+                                "Choisissez 'Active' ou 'Terminée'.");
+            }
+
+            p.setEstSimulation(false);
+            p.setStatut(dto.getStatut());
+        }
+
+        return periodeRepo.save(p);
+    }
 
    @Override
 public Boolean deletePeriode(Long idPeriode) {
