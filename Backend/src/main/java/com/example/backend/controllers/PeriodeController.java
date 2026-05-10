@@ -45,6 +45,10 @@ public ResponseEntity<List<PeriodeBudgetaire>> getPeriodesByUser(@PathVariable L
 public ResponseEntity<PeriodeBudgetaire> getPeriodeById(@PathVariable Long id) {
     return ResponseEntity.ok(periodeService.getPeriodeById(id));
 }
+@GetMapping("/simulations/{idUser}")
+    public ResponseEntity<List<PeriodeBudgetaire>> getSimulationsByUser(@PathVariable Long idUser) {
+        return ResponseEntity.ok(periodeService.getAllPlansByUser(idUser));
+    }
 
 
 

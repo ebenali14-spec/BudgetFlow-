@@ -1,5 +1,6 @@
 package com.example.backend.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
 import java.time.LocalDate;
@@ -30,6 +31,7 @@ public class PeriodeBudgetaire {
     // Relation : un Utilisateur réalise 0..* PériodesBudgetaires
     @ManyToOne(optional = false)
     @JoinColumn(name = "utilisateur_id", nullable = false)
+    @JsonIgnore
     private Utilisateur utilisateur;
 
     // Relation : une PériodeBudgetaire contient 0..* LignesBudget
