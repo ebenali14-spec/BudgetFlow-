@@ -24,8 +24,7 @@ public class PeriodeBudgetaire {
 
     @Column(nullable = false)
     private String statut;
-
-    @Column(nullable = false)
+    
     private boolean estSimulation;
 
     // Relation : un Utilisateur réalise 0..* PériodesBudgetaires

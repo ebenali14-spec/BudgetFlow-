@@ -98,7 +98,7 @@ export class PeriodeCreate {
       error: (err) => {
         this.loading = false;
         // Le backend renvoie 422 avec { erreur: "..." } pour les violations métier
-        if (err.status === 422 && err.error?.erreur) {
+        if (err.status === 400 && err.error?.erreur) {
           this.erreur = err.error.erreur;
         } else {
           this.erreur = 'Erreur lors de la création. Réessayez.';
