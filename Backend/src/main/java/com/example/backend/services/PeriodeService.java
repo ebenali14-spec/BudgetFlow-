@@ -115,7 +115,7 @@ public class PeriodeService implements IPeriodeService {
         if (dto.isEstSimulation()) {
             // ── Règle 3 : simulation → pas de notion de statut
             p.setEstSimulation(true);
-            p.setStatut(null);
+            p.setStatut("SIMULATION");
 
         } else {
             // ── Règle 1 : statut ACTIVE → vérifier qu'aucune période réelle active n'existe déjà
