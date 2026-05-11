@@ -43,10 +43,15 @@ public ResponseEntity<Boolean> deletePeriode(@PathVariable Long id) {
     return ResponseEntity.ok(periodeService.deletePeriode(id));
 }
 
-@PutMapping()
-public ResponseEntity<PeriodeBudgetaire> updatePeriode(@RequestBody PeriodeDTO dto) {
-    return ResponseEntity.ok(periodeService.modifyPeriode(dto));
-}
+    @PutMapping
+    public ResponseEntity<?> updatePeriode(@RequestBody PeriodeDTO dto) {
+        try {
+            return ResponseEntity.ok(periodeService.modifyPeriode(dto));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("message", e.getMessage()));
+        }
+    }
 
 @GetMapping("/user/{idUser}")
 public ResponseEntity<List<PeriodeBudgetaire>> getPeriodesByUser(@PathVariable Long idUser) {

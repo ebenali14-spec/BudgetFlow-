@@ -11,10 +11,7 @@ import java.util.Optional;
 public interface PeriodeRepo extends JpaRepository<PeriodeBudgetaire,Long> {
      List<PeriodeBudgetaire> findByUtilisateurId(Long utilisateurId);
 
-    List<PeriodeBudgetaire> findByUtilisateurIdAndEstSimulation(Long utilisateurId, boolean estSimulation);
-    Optional<PeriodeBudgetaire> findByUtilisateurIdAndStatutAndEstSimulationFalse(
-            Long utilisateurId, String statut);
-    
 
+    Optional<PeriodeBudgetaire> findByUtilisateurIdAndStatut(Long utilisateurId, String statut);
 
 }

@@ -14,10 +14,10 @@ export class PeriodeCreate {
   userId = 1;
 
   form = {
-    dateDebut:     '',
-    dateFin:       '',
-    budgetTotal:   null as number | null,
-    statut:        'ACTIVE',     // défaut ACTIVE pour les périodes réelles
+    dateDebut:   '',
+    dateFin:     '',
+    budgetTotal: null as number | null,
+    statut:      'ACTIF',
     estSimulation: false
   };
 
@@ -25,53 +25,43 @@ export class PeriodeCreate {
   loading   = false;
   submitted = false;
 
-  constructor(
-    private periodeService: PeriodeService,
-    private router: Router
-  ) {}
+  // date min = aujourd'hui
+  get todayStr(): string {
+    return new Date().toISOString().split('T')[0];
+  }
 
-  // ── Durée live ────────────────────────────────────────────────
   get dureeCalculee(): number {
     if (!this.form.dateDebut || !this.form.dateFin) return 0;
     const diff = new Date(this.form.dateFin).getTime() - new Date(this.form.dateDebut).getTime();
     return diff > 0 ? Math.round(diff / (1000 * 60 * 60 * 24)) : 0;
   }
 
-  // ── Quand on coche/décoche simulation ─────────────────────────
-  onSimulationChange(): void {
-    if (this.form.estSimulation) {
-      // Simulation → on efface le statut (sera null côté backend)
-      this.form.statut = '';
-    } else {
-      // Retour en mode réel → on remet le défaut ACTIVE
-      this.form.statut = 'ACTIVE';
-    }
-    this.erreur = '';
-  }
+  constructor(private periodeService: PeriodeService, private router: Router) {}
 
-  // ── Validation front ──────────────────────────────────────────
   private valider(): boolean {
     if (!this.form.dateDebut || !this.form.dateFin) {
       this.erreur = 'Les dates de début et de fin sont obligatoires.';
+      return false;
+    }
+    if (this.form.dateDebut < this.todayStr) {
+      this.erreur = 'La date de début ne peut pas être dans le passé.';
       return false;
     }
     if (this.form.dateFin <= this.form.dateDebut) {
       this.erreur = 'La date de fin doit être postérieure à la date de début.';
       return false;
     }
-    if (!this.form.budgetTotal || this.form.budgetTotal <= 0) {
-      this.erreur = 'Le budget doit être un montant positif.';
+    if (this.dureeCalculee < 7) {
+      this.erreur = 'La période doit durer au minimum 7 jours.';
       return false;
     }
-    // EN_PAUSE bloqué côté front aussi (bouton radio disabled mais sécurité double)
-    if (!this.form.estSimulation && this.form.statut === 'EN_PAUSE') {
-      this.erreur = "Le statut 'En pause' n'est pas autorisé à la création.";
+    if (!this.form.budgetTotal || this.form.budgetTotal <= 0) {
+      this.erreur = 'Le budget doit être un montant positif.';
       return false;
     }
     return true;
   }
 
-  // ── Création ──────────────────────────────────────────────────
   creerPeriode(): void {
     this.submitted = true;
     this.erreur    = '';
@@ -84,9 +74,7 @@ export class PeriodeCreate {
       dateDebut:     this.form.dateDebut,
       dateFin:       this.form.dateFin,
       budgetTotal:   this.form.budgetTotal,
-      // Si simulation → on envoie null, sinon on envoie le statut choisi
-      statut:        this.form.estSimulation ? null : this.form.statut,
-      estSimulation: this.form.estSimulation,
+      statut:        this.form.estSimulation ? 'SIMULATION' : 'ACTIF',
       utilisateurId: this.userId
     };
 
@@ -97,9 +85,8 @@ export class PeriodeCreate {
       },
       error: (err) => {
         this.loading = false;
-        // Le backend renvoie 422 avec { erreur: "..." } pour les violations métier
-        if (err.status === 400 && err.error?.erreur) {
-          this.erreur = err.error.erreur;
+        if (err.error?.message) {
+          this.erreur = err.error.message;
         } else {
           this.erreur = 'Erreur lors de la création. Réessayez.';
         }

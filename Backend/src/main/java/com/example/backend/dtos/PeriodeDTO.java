@@ -8,7 +8,6 @@ public class PeriodeDTO {
     private LocalDate dateFin;
     private double budgetTotal;
     private String statut;
-    private boolean estSimulation;
     private Long utilisateurId;
 
     public Long getId() { return id; }
@@ -26,8 +25,6 @@ public class PeriodeDTO {
     public String getStatut() { return statut; }
     public void setStatut(String statut) { this.statut = statut; }
 
-    public boolean isEstSimulation() { return estSimulation; }
-    public void setEstSimulation(boolean estSimulation) { this.estSimulation = estSimulation; }
 
     public Long getUtilisateurId() { return utilisateurId; }
     public void setUtilisateurId(Long utilisateurId) { this.utilisateurId = utilisateurId; }

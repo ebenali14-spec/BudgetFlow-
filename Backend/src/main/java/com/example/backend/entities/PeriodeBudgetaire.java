@@ -25,7 +25,6 @@ public class PeriodeBudgetaire {
     @Column(nullable = false)
     private String statut;
 
-    private boolean estSimulation;
 
     // Relation : un Utilisateur réalise 0..* PériodesBudgetaires
     @ManyToOne(optional = false)
@@ -75,14 +74,6 @@ public class PeriodeBudgetaire {
 
     public void setStatut(String statut) {
         this.statut = statut;
-    }
-
-    public boolean isEstSimulation() {
-        return estSimulation;
-    }
-
-    public void setEstSimulation(boolean estSimulation) {
-        this.estSimulation = estSimulation;
     }
 
     public Utilisateur getUtilisateur() {

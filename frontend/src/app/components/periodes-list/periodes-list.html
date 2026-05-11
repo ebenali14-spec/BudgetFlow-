@@ -1,4 +1,3 @@
-<!-- Toast notification -->
 @if (succes) {
   <div class="bf-toast">
     <i class="bi bi-check-circle-fill"></i> {{ succes }}
@@ -7,7 +6,6 @@
 
 <div class="bf-page">
 
-  <!-- Page Header -->
   <div class="bf-page-header">
     <div>
       <h1 class="bf-page-title">Périodes budgétaires</h1>
@@ -18,12 +16,19 @@
     </a>
   </div>
 
-  <!-- Filters -->
+  <!-- Filtres statut -->
   <div class="bf-filters">
     <div class="bf-filter-group">
-      <button class="bf-filter-btn" [class.active]="filtreType === 'toutes'"      (click)="setFiltreType('toutes')">Toutes</button>
-      <button class="bf-filter-btn" [class.active]="filtreType === 'reelles'"     (click)="setFiltreType('reelles')">Réelles</button>
-      <button class="bf-filter-btn" [class.active]="filtreType === 'simulations'" (click)="setFiltreType('simulations')">Simulations</button>
+      <button class="bf-filter-btn" [class.active]="filtreStatut === 'tous'"
+              (click)="setFiltreStatut('tous')">Toutes</button>
+      <button class="bf-filter-btn" [class.active]="filtreStatut === 'ACTIF'"
+              (click)="setFiltreStatut('ACTIF')">Actives</button>
+      <button class="bf-filter-btn" [class.active]="filtreStatut === 'SIMULATION'"
+              (click)="setFiltreStatut('SIMULATION')">Simulations</button>
+      <button class="bf-filter-btn" [class.active]="filtreStatut === 'DESACTIVE'"
+              (click)="setFiltreStatut('DESACTIVE')">Désactivées</button>
+      <button class="bf-filter-btn" [class.active]="filtreStatut === 'TERMINE'"
+              (click)="setFiltreStatut('TERMINE')">Terminées</button>
     </div>
 
     <select class="bf-filter-select" (change)="setFiltreAnnee($event)">
@@ -48,12 +53,12 @@
       </div>
       <div class="bf-stat-divider"></div>
       <div class="bf-stat">
-        <span class="bf-stat-value">{{ periodesFiltrees.length - nbSimulations() }}</span>
-        <span class="bf-stat-label">Réelles</span>
+        <span class="bf-stat-value">{{ nbParStatut('ACTIF') }}</span>
+        <span class="bf-stat-label">Actives</span>
       </div>
       <div class="bf-stat-divider"></div>
       <div class="bf-stat">
-        <span class="bf-stat-value">{{ nbSimulations() }}</span>
+        <span class="bf-stat-value">{{ nbParStatut('SIMULATION') }}</span>
         <span class="bf-stat-label">Simulations</span>
       </div>
     </div>
@@ -62,9 +67,7 @@
   <!-- Empty state -->
   @if (periodesFiltrees.length === 0) {
     <div class="bf-empty">
-      <div class="bf-empty-icon">
-        <i class="bi bi-calendar-x"></i>
-      </div>
+      <div class="bf-empty-icon"><i class="bi bi-calendar-x"></i></div>
       <div class="bf-empty-title">Aucune période trouvée</div>
       <div class="bf-empty-sub">Changez les filtres ou créez une nouvelle période.</div>
       <a routerLink="/periodes/add" class="bf-btn-primary">
@@ -77,29 +80,33 @@
   @if (periodesFiltrees.length > 0) {
     <div class="bf-grid">
       @for (p of periodesFiltrees; track p.id) {
-        <div class="bf-card" [class.is-inactive]="p.statut !== 'ACTIVE'">
+        <div class="bf-card" [ngClass]="{
+          'is-simulation': p.statut === 'SIMULATION',
+          'is-inactive':   p.statut === 'DESACTIVE' || p.statut === 'TERMINE'
+        }">
 
-          <!-- Card header -->
+          <!-- Badge statut -->
           <div class="bf-card-top">
             <span class="bf-badge" [ngClass]="{
-              'badge-active':   p.statut === 'ACTIVE',
-              'badge-pause':    p.statut === 'EN_PAUSE',
-              'badge-inactive': p.statut === 'TERMINEE'
+              'badge-active':   p.statut === 'ACTIF',
+              'badge-sim':      p.statut === 'SIMULATION',
+              'badge-pause':    p.statut === 'DESACTIVE',
+              'badge-inactive': p.statut === 'TERMINE'
             }">
               <i class="bi" [ngClass]="{
-                'bi-check-circle-fill': p.statut === 'ACTIVE',
-                'bi-pause-circle-fill': p.statut === 'EN_PAUSE',
-                'bi-x-circle-fill':     p.statut === 'TERMINEE'
+                'bi-check-circle-fill':  p.statut === 'ACTIF',
+                'bi-bar-chart-line-fill':p.statut === 'SIMULATION',
+                'bi-slash-circle-fill':  p.statut === 'DESACTIVE',
+                'bi-x-circle-fill':      p.statut === 'TERMINE'
               }"></i>
-              {{ p.statut === 'EN_PAUSE' ? 'En pause' : p.statut === 'TERMINEE' ? 'Terminée' : 'Active' }}
+              {{ labelStatut(p.statut) }}
             </span>
-            @if (p.estSimulation) {
-              <span class="bf-badge-sim"><i class="bi bi-bar-chart-line-fill"></i> Simulation</span>
-            }
           </div>
 
           <!-- Budget -->
-          <div class="bf-card-budget">{{ p.budgetTotal | number:'1.0-0' }} <span class="bf-dt">DT</span></div>
+          <div class="bf-card-budget">
+            {{ p.budgetTotal | number:'1.0-0' }} <span class="bf-dt">DT</span>
+          </div>
           <div class="bf-card-budget-label">budget total</div>
 
           <!-- Dates -->
@@ -117,12 +124,13 @@
               <i class="bi bi-pencil"></i> Modifier
             </a>
             <button class="bf-btn-deactivate"
-                    [disabled]="p.statut !== 'ACTIVE'"
+                    [disabled]="p.statut !== 'ACTIF'"
                     (click)="ouvrirDesactivation(p)"
-                    [title]="p.statut !== 'ACTIVE' ? 'Déjà inactive' : 'Désactiver'">
+                    [title]="p.statut !== 'ACTIF' ? 'Non disponible' : 'Désactiver'">
               <i class="bi bi-slash-circle"></i> Désactiver
             </button>
           </div>
+
         </div>
       }
     </div>
@@ -130,7 +138,7 @@
 
 </div>
 
-<!-- MODAL: Désactivation -->
+<!-- MODAL Désactivation -->
 @if (modalDesactivation) {
   <div class="bf-overlay" (click)="fermerModal()">
     <div class="bf-modal bf-modal-sm" (click)="$event.stopPropagation()">
@@ -140,8 +148,9 @@
       <h2 class="bf-confirm-title">Désactiver cette période ?</h2>
       <p class="bf-confirm-sub">
         Budget : <strong>{{ periodeSelectionnee?.budgetTotal | number:'1.0-0' }} DT</strong><br>
-        Du <strong>{{ periodeSelectionnee?.dateDebut }}</strong> au <strong>{{ periodeSelectionnee?.dateFin }}</strong><br>
-        La période passera en statut <strong>TERMINEE</strong>.
+        Du <strong>{{ periodeSelectionnee?.dateDebut }}</strong>
+        au <strong>{{ periodeSelectionnee?.dateFin }}</strong><br>
+        La période passera en statut <strong>DESACTIVE</strong>.
       </p>
       <div class="bf-modal-actions">
         <button class="bf-btn-secondary" (click)="fermerModal()">Annuler</button>

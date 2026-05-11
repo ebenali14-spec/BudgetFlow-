@@ -112,57 +112,70 @@ public class PeriodeService implements IPeriodeService {
         u.setId(dto.getUtilisateurId());
         p.setUtilisateur(u);
 
-        if (dto.isEstSimulation()) {
-            // ── Règle 3 : simulation → pas de notion de statut
-            p.setEstSimulation(true);
-            p.setStatut("SIMULATION");
-
-        } else {
-            // ── Règle 1 : statut ACTIVE → vérifier qu'aucune période réelle active n'existe déjà
-            if ("ACTIVE".equals(dto.getStatut())) {
-                boolean dejaActive = periodeRepo
-                        .findByUtilisateurIdAndStatutAndEstSimulationFalse(
-                                dto.getUtilisateurId(), "ACTIVE")
-                        .isPresent();
-                if (dejaActive) {
-                    throw new RuntimeException(
-                            "Vous avez déjà une période réelle active. " +
-                                    "Désactivez-la avant d'en créer une nouvelle.");
-                }
-            }
-
-            // ── Règle 2 : statut EN_PAUSE interdit à la création
-            if ("EN_PAUSE".equals(dto.getStatut())) {
+        if ("ACTIF".equals(dto.getStatut())) {
+            boolean dejaActive = periodeRepo
+                    .findByUtilisateurIdAndStatut(dto.getUtilisateurId(), "ACTIF")
+                    .isPresent();
+            if (dejaActive) {
                 throw new RuntimeException(
-                        "Impossible de créer une période avec le statut 'En pause'. " +
-                                "Choisissez 'Active' ou 'Terminée'.");
+                        "Vous avez déjà une période active. Désactivez-la avant d'en créer une nouvelle.");
             }
-
-            p.setEstSimulation(false);
-            p.setStatut(dto.getStatut());
         }
 
+        p.setStatut(dto.getStatut());
         return periodeRepo.save(p);
     }
-
    @Override
 public Boolean deletePeriode(Long idPeriode) {
     periodeRepo.deleteById(idPeriode);
     return true;
 }
 
-   @Override
-public PeriodeBudgetaire modifyPeriode(PeriodeDTO dto) {
-    PeriodeBudgetaire p = periodeRepo.findById(dto.getId())
-            .orElseThrow(() -> new RuntimeException("Période introuvable"));
-    p.setDateDebut(dto.getDateDebut());
-    p.setDateFin(dto.getDateFin());
-    p.setBudgetTotal(dto.getBudgetTotal());
-    p.setStatut(dto.getStatut());
-    p.setEstSimulation(dto.isEstSimulation());
-    return periodeRepo.save(p);
-}
+    @Override
+    public PeriodeBudgetaire modifyPeriode(PeriodeDTO dto) {
+        PeriodeBudgetaire p = periodeRepo.findById(dto.getId())
+                .orElseThrow(() -> new RuntimeException("Période introuvable"));
 
+        String statutActuel = p.getStatut();
+        String nouveauStatut = dto.getStatut();
+
+        // ACTIF → uniquement DESACTIVE ou TERMINE
+        if ("ACTIF".equals(statutActuel)) {
+            if (!("DESACTIVE".equals(nouveauStatut) || "TERMINE".equals(nouveauStatut))) {
+                throw new RuntimeException(
+                        "Une période active ne peut être que désactivée ou terminée.");
+            }
+        }
+
+        // SIMULATION → uniquement ACTIF
+        if ("SIMULATION".equals(statutActuel) && "ACTIF".equals(nouveauStatut)) {
+            if (dto.getDateFin() == null) {
+                throw new RuntimeException(
+                        "Veuillez définir une date de fin pour activer cette simulation.");
+            }
+            // vérifier qu'aucune période active n'existe déjà
+            boolean dejaActive = periodeRepo
+                    .findByUtilisateurIdAndStatut(p.getUtilisateur().getId(), "ACTIF")
+                    .isPresent();
+            if (dejaActive) {
+                throw new RuntimeException(
+                        "Vous avez déjà une période active. Désactivez-la avant d'en activer une nouvelle.");
+            }
+        }
+
+        // SIMULATION ne peut pas devenir autre chose qu'ACTIF
+        if ("SIMULATION".equals(statutActuel) &&
+                !("ACTIF".equals(nouveauStatut) || "SIMULATION".equals(nouveauStatut))) {
+            throw new RuntimeException(
+                    "Une simulation ne peut être convertie qu'en période active.");
+        }
+
+        p.setDateDebut(dto.getDateDebut());
+        p.setDateFin(dto.getDateFin());
+        p.setBudgetTotal(dto.getBudgetTotal());
+        p.setStatut(nouveauStatut);
+        return periodeRepo.save(p);
+    }
 
     @Override
     public RepartionResponseDTO calculerRepartition(RepartionRequestDTO dto) {
@@ -205,11 +218,11 @@ public PeriodeBudgetaire modifyPeriode(PeriodeDTO dto) {
     }
     @Override
 public List<PeriodeBudgetaire> getAllPlansByUser(Long idUser) {
-    return periodeRepo.findByUtilisateurIdAndEstSimulation(idUser, true);
+    return periodeRepo.findByUtilisateurId(idUser);
 }
 @Override
 public List<PeriodeBudgetaire> getPeriodesByUser(Long idUser) {
-    return periodeRepo.findByUtilisateurIdAndEstSimulation(idUser, false);
+    return periodeRepo.findByUtilisateurId(idUser);
 }
 
 @Override
