@@ -33,8 +33,8 @@ public class PeriodeController {
             PeriodeBudgetaire created = periodeService.createPeriode(dto);
             return ResponseEntity.ok(created);
         } catch (RuntimeException e) {
-            // 422 Unprocessable Entity → violation d'une règle métier
-            return ResponseEntity.badRequest().body(Map.of("erreur", e.getMessage()));
+
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
         }
     }
 

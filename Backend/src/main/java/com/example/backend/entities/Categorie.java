@@ -19,9 +19,13 @@ public class Categorie {
     @OneToMany(mappedBy = "categorie", cascade = CascadeType.ALL)
     private List<LigneBudget> lignesBudget = new ArrayList<>();
 
+    public String getId() {
+        return id;
+    }
 
-
-
+    public void setId(String id) {
+        this.id = id;
+    }
 
     public String getNom() {
         return nom;

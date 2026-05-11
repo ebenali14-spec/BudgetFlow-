@@ -7,5 +7,5 @@ import java.util.List;
 
 public interface ICategorieService {
     Categorie addCategorie(CategorieDTO dto);
-
+    public List<Categorie> getAll();
 }

@@ -30,5 +30,8 @@ export class PeriodeService {
   deletePeriode(id: number): Observable<boolean> {
     return this.http.delete<boolean>(`${this.apiUrl}/delete/${id}`);
   }
+  calculerRepartition(payload: any): Observable<{ pourcentages: Record<string, number>; montants: Record<string, number> }> {
+  return this.http.post<any>(`${this.apiUrl}/calculer-repartition`, payload);
+}
   
 }

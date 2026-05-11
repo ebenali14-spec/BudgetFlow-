@@ -85,23 +85,20 @@
           'is-inactive':   p.statut === 'DESACTIVE' || p.statut === 'TERMINE'
         }">
 
-          <!-- Badge statut -->
-          <div class="bf-card-top">
-            <span class="bf-badge" [ngClass]="{
-              'badge-active':   p.statut === 'ACTIF',
-              'badge-sim':      p.statut === 'SIMULATION',
-              'badge-pause':    p.statut === 'DESACTIVE',
-              'badge-inactive': p.statut === 'TERMINE'
-            }">
-              <i class="bi" [ngClass]="{
-                'bi-check-circle-fill':  p.statut === 'ACTIF',
-                'bi-bar-chart-line-fill':p.statut === 'SIMULATION',
-                'bi-slash-circle-fill':  p.statut === 'DESACTIVE',
-                'bi-x-circle-fill':      p.statut === 'TERMINE'
-              }"></i>
-              {{ labelStatut(p.statut) }}
-            </span>
-          </div>
+       <!-- Badge statut -->
+<div class="bf-card-top">
+  <span
+    class="badge d-inline-flex align-items-center gap-1 w-auto"
+    [ngClass]="{
+      'text-bg-success': p.statut === 'ACTIF',
+      'text-bg-primary': p.statut === 'SIMULATION',
+      'text-bg-warning': p.statut === 'DESACTIVE',
+      'text-bg-secondary': p.statut === 'TERMINE'
+    }"
+  >
+    {{ labelStatut(p.statut) }}
+  </span>
+</div>
 
           <!-- Budget -->
           <div class="bf-card-budget">

@@ -4,45 +4,59 @@
   </a>
 
   <div class="bf-create-header">
-    <div class="bf-create-icon">
-      <i class="bi bi-calendar-plus"></i>
-    </div>
+    <div class="bf-create-icon"><i class="bi bi-calendar-plus"></i></div>
     <div>
       <h1 class="bf-create-title">Nouvelle période</h1>
-      <p class="bf-create-sub">Définissez une nouvelle période budgétaire</p>
+      <p class="bf-create-sub">Configurez et simulez votre répartition budgétaire</p>
     </div>
   </div>
 
+  @if (erreur) {
+    <div class="bf-alert-error">
+      <i class="bi bi-exclamation-triangle-fill"></i> {{ erreur }}
+    </div>
+  }
+
+  <!-- ── ZONE 1 : Infos de base ── -->
   <div class="bf-form-card">
+    <div class="bf-section-title">
+      <i class="bi bi-sliders"></i> Informations de base
+    </div>
 
-    @if (erreur) {
-      <div class="bf-alert-error">
-        <i class="bi bi-exclamation-triangle-fill"></i> {{ erreur }}
+    <div class="bf-form-group">
+      <label class="bf-label"><i class="bi bi-toggle-on"></i> Type de période</label>
+      <div class="bf-statut-group">
+        <label class="bf-statut-card" [class.selected]="form.statut === 'ACTIF'">
+          <input type="radio" name="statut" value="ACTIF" [(ngModel)]="form.statut" />
+          <span class="bf-statut-dot active"></span>
+          <div><strong>Actif</strong><small>Période réelle</small></div>
+        </label>
+        <label class="bf-statut-card" [class.selected]="form.statut === 'SIMULATION'">
+          <input type="radio" name="statut" value="SIMULATION" [(ngModel)]="form.statut" />
+          <span class="bf-statut-dot pause"></span>
+          <div><strong>Simulation</strong><small>Sans impact réel</small></div>
+        </label>
       </div>
-    }
+    </div>
 
-    <!-- Dates -->
     <div class="bf-form-row">
       <div class="bf-form-group">
         <label class="bf-label" for="dateDebut">
           <i class="bi bi-calendar-event"></i> Date de début
         </label>
         <input id="dateDebut" type="date" class="bf-input"
-               [(ngModel)]="form.dateDebut"
-               [min]="todayStr"
+               [(ngModel)]="form.dateDebut" [min]="todayStr"
                [class.is-invalid]="submitted && !form.dateDebut" />
         @if (submitted && !form.dateDebut) {
           <span class="bf-field-error">Champ requis</span>
         }
       </div>
-
       <div class="bf-form-group">
         <label class="bf-label" for="dateFin">
           <i class="bi bi-calendar-check"></i> Date de fin
         </label>
         <input id="dateFin" type="date" class="bf-input"
-               [(ngModel)]="form.dateFin"
-               [min]="form.dateDebut || todayStr"
+               [(ngModel)]="form.dateFin" [min]="form.dateDebut || todayStr"
                [class.is-invalid]="submitted && !form.dateFin" />
         @if (submitted && !form.dateFin) {
           <span class="bf-field-error">Champ requis</span>
@@ -58,15 +72,13 @@
       </div>
     }
 
-    <!-- Budget -->
     <div class="bf-form-group">
       <label class="bf-label" for="budget">
         <i class="bi bi-cash-coin"></i> Budget total
       </label>
       <div class="bf-input-addon-wrap">
         <input id="budget" type="number" class="bf-input bf-input-addon"
-               [(ngModel)]="form.budgetTotal"
-               placeholder="ex: 3000" min="1"
+               [(ngModel)]="form.budgetTotal" placeholder="ex: 3000" min="1"
                [class.is-invalid]="submitted && (!form.budgetTotal || form.budgetTotal <= 0)" />
         <span class="bf-addon">DT</span>
       </div>
@@ -74,48 +86,249 @@
         <span class="bf-field-error">Entrez un budget positif</span>
       }
     </div>
+  </div>
 
-    <!-- Statut -->
-    <div class="bf-form-group">
-      <label class="bf-label">
-        <i class="bi bi-toggle-on"></i> Statut
-      </label>
-      <div class="bf-statut-group">
-
-        <label class="bf-statut-card" [class.selected]="form.statut === 'ACTIF'">
-          <input type="radio" name="statut" value="ACTIF" [(ngModel)]="form.statut" />
-          <span class="bf-statut-dot active"></span>
-          <div>
-            <strong>Actif</strong>
-            <small>Période budgétaire réelle en cours</small>
-          </div>
-        </label>
-
-        <label class="bf-statut-card" [class.selected]="form.statut === 'SIMULATION'">
-          <input type="radio" name="statut" value="SIMULATION" [(ngModel)]="form.statut" />
-          <span class="bf-statut-dot pause"></span>
-          <div>
-            <strong>Simulation</strong>
-            <small>N'affecte pas vos budgets réels</small>
-          </div>
-        </label>
-
-      </div>
+  <!-- ── ZONE 2 : Questionnaire ── -->
+  <div class="bf-form-card">
+    <div class="bf-section-title">
+      <i class="bi bi-patch-question"></i> Questionnaire de répartition
     </div>
+    <p class="bf-section-sub">
+      Répondez aux questions pour chaque catégorie. Excluez celles qui ne vous concernent pas.
+    </p>
 
-    <!-- Actions -->
-    <div class="bf-form-actions">
-      <a routerLink="/periodes" class="bf-btn-secondary">
-        <i class="bi bi-x-lg"></i> Annuler
-      </a>
-      <button class="bf-btn-primary" (click)="creerPeriode()" [disabled]="loading">
-        @if (loading) {
-          <span class="bf-spinner"></span> Création...
+    @for (cat of categories; track cat.id) {
+      <div class="bf-cat-block" [class.exclue]="cat.exclue">
+
+        <div class="bf-cat-header">
+          <span class="bf-cat-nom">
+            {{ cat.nom }}
+            @if (!cat.estParDefaut) {
+              <span class="bf-badge-perso">perso</span>
+            }
+          </span>
+          <button class="bf-btn-exclure"
+                  (click)="cat.exclue = !cat.exclue; onReponseChange()">
+            @if (cat.exclue) {
+              <i class="bi bi-plus-circle"></i> Inclure
+            } @else {
+              <i class="bi bi-dash-circle"></i> Exclure
+            }
+          </button>
+        </div>
+
+        @if (!cat.exclue) {
+
+          <!-- ── Catégorie DEFAULT : sa propre question + ses options ── -->
+          @if (cat.estParDefaut && questionsDefault[cat.id]) {
+            <div class="bf-question">
+              <div class="bf-question-label">
+                {{ questionsDefault[cat.id].label }}
+              </div>
+              <div class="bf-options-row">
+                @for (opt of questionsDefault[cat.id].options; track opt.value) {
+                  <label class="bf-opt-btn" [class.selected]="cat.reponse === opt.value">
+                    <input type="radio"
+                           [name]="'q_' + cat.id"
+                           [value]="opt.value"
+                           [(ngModel)]="cat.reponse"
+                           (change)="onReponseChange()" />
+                    {{ opt.label }}
+                  </label>
+                }
+              </div>
+            </div>
+          }
+
+          <!-- ── Catégorie PERSO : 3 questions ── -->
+          @if (!cat.estParDefaut) {
+            <div class="bf-question">
+              <div class="bf-question-label">
+                À quelle fréquence dépensez-vous dans cette catégorie ?
+              </div>
+              <div class="bf-options-row">
+                @for (opt of optionsFrequence; track opt.value) {
+                  <label class="bf-opt-btn" [class.selected]="cat.frequence === opt.value">
+                    <input type="radio"
+                           [name]="'freq_' + cat.id"
+                           [value]="opt.value"
+                           [(ngModel)]="cat.frequence"
+                           (change)="onReponseChange()" />
+                    {{ opt.label }}
+                  </label>
+                }
+              </div>
+            </div>
+
+            <div class="bf-question">
+              <div class="bf-question-label">
+                Est-ce une dépense essentielle ou optionnelle ?
+              </div>
+              <div class="bf-options-row">
+                @for (opt of optionsEssentialite; track opt.value) {
+                  <label class="bf-opt-btn" [class.selected]="cat.essentialite === opt.value">
+                    <input type="radio"
+                           [name]="'ess_' + cat.id"
+                           [value]="opt.value"
+                           [(ngModel)]="cat.essentialite"
+                           (change)="onReponseChange()" />
+                    {{ opt.label }}
+                  </label>
+                }
+              </div>
+            </div>
+
+            <div class="bf-question">
+              <div class="bf-question-label">
+                Quel montant mensuel estimez-vous ?
+              </div>
+              <div class="bf-options-row">
+                @for (opt of optionsMontant; track opt.value) {
+                  <label class="bf-opt-btn" [class.selected]="cat.montant === opt.value">
+                    <input type="radio"
+                           [name]="'montant_' + cat.id"
+                           [value]="opt.value"
+                           [(ngModel)]="cat.montant"
+                           (change)="onReponseChange()" />
+                    {{ opt.label }}
+                  </label>
+                }
+              </div>
+            </div>
+          }
+
+        }
+      </div>
+    }
+
+    <!-- Ajouter catégorie perso -->
+    @if (!ajoutCategorieVisible) {
+      <button class="bf-btn-add-cat" (click)="afficherAjoutCategorie()">
+        <i class="bi bi-plus-lg"></i> Ajouter une catégorie personnalisée
+      </button>
+    }
+
+    @if (ajoutCategorieVisible) {
+      <div class="bf-add-cat-block">
+        <div class="bf-section-title" style="font-size:0.85rem">
+          Nouvelle catégorie personnalisée
+        </div>
+
+        @if (erreurAjout) {
+          <div class="bf-alert-error">
+            <i class="bi bi-exclamation-triangle-fill"></i> {{ erreurAjout }}
+          </div>
+        }
+
+        <div class="bf-form-group">
+          <label class="bf-label">Nom de la catégorie</label>
+          <input type="text" class="bf-input"
+                 [(ngModel)]="nouvelleCategorie.nom"
+                 placeholder="ex: Animaux, Abonnements..." />
+        </div>
+
+        <div class="bf-question">
+          <div class="bf-question-label">
+            À quelle fréquence dépensez-vous dans cette catégorie ?
+          </div>
+          <div class="bf-options-row">
+            @for (opt of optionsFrequence; track opt.value) {
+              <label class="bf-opt-btn"
+                     [class.selected]="nouvelleCategorie.frequence === opt.value">
+                <input type="radio" name="new_freq"
+                       [value]="opt.value"
+                       [(ngModel)]="nouvelleCategorie.frequence" />
+                {{ opt.label }}
+              </label>
+            }
+          </div>
+        </div>
+
+        <div class="bf-question">
+          <div class="bf-question-label">
+            Est-ce une dépense essentielle ou optionnelle ?
+          </div>
+          <div class="bf-options-row">
+            @for (opt of optionsEssentialite; track opt.value) {
+              <label class="bf-opt-btn"
+                     [class.selected]="nouvelleCategorie.essentialite === opt.value">
+                <input type="radio" name="new_ess"
+                       [value]="opt.value"
+                       [(ngModel)]="nouvelleCategorie.essentialite" />
+                {{ opt.label }}
+              </label>
+            }
+          </div>
+        </div>
+
+        <div class="bf-question">
+          <div class="bf-question-label">Quel montant mensuel estimez-vous ?</div>
+          <div class="bf-options-row">
+            @for (opt of optionsMontant; track opt.value) {
+              <label class="bf-opt-btn"
+                     [class.selected]="nouvelleCategorie.montant === opt.value">
+                <input type="radio" name="new_montant"
+                       [value]="opt.value"
+                       [(ngModel)]="nouvelleCategorie.montant" />
+                {{ opt.label }}
+              </label>
+            }
+          </div>
+        </div>
+
+        <div class="bf-form-actions" style="margin-top:1rem">
+          <button class="bf-btn-secondary" (click)="annulerAjout()">Annuler</button>
+          <button class="bf-btn-primary" (click)="ajouterCategorie()">
+            <i class="bi bi-plus-lg"></i> Ajouter
+          </button>
+        </div>
+      </div>
+    }
+
+    <div style="margin-top:1.5rem">
+      <button class="bf-btn-primary" style="width:100%"
+              [disabled]="!formulaireComplet || loadingRepartition"
+              (click)="calculerRepartition()">
+        @if (loadingRepartition) {
+          <span class="bf-spinner"></span> Calcul en cours...
         } @else {
-          <i class="bi bi-check-lg"></i> Créer la période
+          <i class="bi bi-calculator"></i> Calculer la répartition
         }
       </button>
     </div>
-
   </div>
+
+  <!-- ── ZONE 3 : Répartition ── -->
+  @if (repartitionChargee) {
+    <div class="bf-form-card">
+      <div class="bf-section-title">
+        <i class="bi bi-pie-chart"></i> Répartition proposée
+      </div>
+
+      @for (ligne of repartition; track ligne.categorie) {
+        <div class="bf-repartition-row">
+          <span class="bf-rep-nom">{{ ligne.categorie }}</span>
+          <div class="bf-rep-bar-wrap">
+            <div class="bf-rep-bar" [style.width.%]="ligne.pourcentage"></div>
+          </div>
+          <span class="bf-rep-pct">{{ ligne.pourcentage }}%</span>
+          <span class="bf-rep-montant">{{ ligne.montant | number:'1.0-2' }} DT</span>
+        </div>
+      }
+
+      <div class="bf-form-actions" style="margin-top:1.5rem">
+        <a routerLink="/periodes" class="bf-btn-secondary">
+          <i class="bi bi-x-lg"></i> Annuler
+        </a>
+        <button class="bf-btn-primary" (click)="creerPeriode()" [disabled]="loading">
+          @if (loading) {
+            <span class="bf-spinner"></span> Création...
+          } @else {
+            <i class="bi bi-check-lg"></i> Valider et créer
+          }
+        </button>
+      </div>
+    </div>
+  }
+
 </div>

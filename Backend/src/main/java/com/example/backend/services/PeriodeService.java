@@ -141,12 +141,13 @@ public Boolean deletePeriode(Long idPeriode) {
 
         // ACTIF → uniquement DESACTIVE ou TERMINE
         if ("ACTIF".equals(statutActuel)) {
-            if (!("DESACTIVE".equals(nouveauStatut) || "TERMINE".equals(nouveauStatut))) {
+            if (!("ACTIF".equals(nouveauStatut) ||
+                    "DESACTIVE".equals(nouveauStatut) ||
+                    "TERMINE".equals(nouveauStatut))) {
                 throw new RuntimeException(
-                        "Une période active ne peut être que désactivée ou terminée.");
+                        "Une période active ne peut être que maintenue active, désactivée ou terminée.");
             }
         }
-
         // SIMULATION → uniquement ACTIF
         if ("SIMULATION".equals(statutActuel) && "ACTIF".equals(nouveauStatut)) {
             if (dto.getDateFin() == null) {
@@ -180,6 +181,7 @@ public Boolean deletePeriode(Long idPeriode) {
     @Override
     public RepartionResponseDTO calculerRepartition(RepartionRequestDTO dto) {
         Map<String, Integer> scoresCategories = new HashMap<>();
+
 
         for (String reponse : dto.getReponses()) {
             // catégorie par défaut    => "LOGEMENT_ETUDIANT_LOCATAIRE"
