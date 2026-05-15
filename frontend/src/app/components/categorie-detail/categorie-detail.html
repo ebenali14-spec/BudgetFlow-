@@ -1,0 +1,187 @@
+<div class="bcd-page">
+
+  @if (succes) {
+    <div class="bcd-toast"><i class="bi bi-check-circle-fill"></i> {{ succes }}</div>
+  }
+
+  <button class="bcd-back" (click)="retour()">
+    <i class="bi bi-arrow-left"></i> Retour à la période
+  </button>
+
+  @if (loadingData) {
+    <div class="bcd-skeleton-header"></div>
+    <div class="bcd-card"><div class="bcd-skeleton-row"></div><div class="bcd-skeleton-row short"></div></div>
+  }
+
+  @if (!loadingData) {
+
+    @if (erreur) {
+      <div class="bcd-alert-error"><i class="bi bi-exclamation-triangle-fill"></i> {{ erreur }}</div>
+    }
+
+    <!-- ══════════════════════════════════════════════════════
+         HEADER CATÉGORIE
+    ══════════════════════════════════════════════════════ -->
+    <div class="bcd-cat-header">
+      <div class="bcd-cat-accent" [style.background]="couleur"></div>
+      <div class="bcd-cat-info">
+        <h1 class="bcd-cat-nom">{{ ligne?.nom }}</h1>
+        <p class="bcd-cat-periode">
+          Période du {{ periode?.dateDebut }} au {{ periode?.dateFin }}
+        </p>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════
+         STATS CARDS
+    ══════════════════════════════════════════════════════ -->
+    <div class="bcd-stats-grid">
+
+      <div class="bcd-stat-card">
+        <div class="bcd-stat-label">Budget alloué</div>
+        <div class="bcd-stat-value">{{ ligne?.montantAlloue | number:'1.0-0' }} <span class="bcd-dt">DT</span></div>
+      </div>
+
+      <div class="bcd-stat-card" [class.bcd-stat-danger]="montantRestant < 0">
+        <div class="bcd-stat-label">Restant</div>
+        <div class="bcd-stat-value">{{ montantRestant | number:'1.0-0' }} <span class="bcd-dt">DT</span></div>
+      </div>
+
+      <div class="bcd-stat-card" [class.bcd-stat-warn]="seuilJournalier < 0">
+        <div class="bcd-stat-label">Seuil / jour</div>
+        <div class="bcd-stat-value">{{ seuilJournalier | number:'1.0-2' }} <span class="bcd-dt">DT</span></div>
+        <div class="bcd-stat-sub">{{ joursRestants }} jours restants</div>
+      </div>
+
+      <div class="bcd-stat-card">
+        <div class="bcd-stat-label">Dépensé</div>
+        <div class="bcd-stat-value">{{ montantDepense | number:'1.0-0' }} <span class="bcd-dt">DT</span></div>
+        <div class="bcd-stat-sub">{{ pourcentageConsomme }}% du budget</div>
+      </div>
+
+    </div>
+
+    <!-- Barre progression globale -->
+    <div class="bcd-progress-wrap">
+      <div class="bcd-progress-track">
+        <div class="bcd-progress-fill"
+             [style.width.%]="pourcentageConsomme"
+             [style.background]="pourcentageConsomme >= 100 ? '#c0392b' : couleur">
+        </div>
+      </div>
+      <span class="bcd-progress-label" [class.bcd-danger]="pourcentageConsomme >= 100">
+        {{ pourcentageConsomme }}% consommé
+      </span>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════
+         FORMULAIRE AJOUT DÉPENSE
+    ══════════════════════════════════════════════════════ -->
+    <div class="bcd-card">
+      <div class="bcd-section-label">Enregistrer une dépense</div>
+
+      @if (erreurForm) {
+        <div class="bcd-alert-error" style="margin-bottom:.8rem">{{ erreurForm }}</div>
+      }
+
+      <div class="bcd-form-row">
+        <div class="bcd-field" style="flex:2">
+          <div class="bcd-label">Description</div>
+          <input type="text" class="bcd-input" [(ngModel)]="nouvelleDepense.description"
+                 placeholder="ex: Courses Carrefour" />
+        </div>
+        <div class="bcd-field" style="flex:1">
+          <div class="bcd-label">Montant</div>
+          <div class="bcd-addon-wrap">
+            <input type="number" class="bcd-input bcd-input-addon"
+                   [(ngModel)]="nouvelleDepense.montant" placeholder="0" min="0" />
+            <span class="bcd-addon">DT</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="bcd-form-hint">
+        <i class="bi bi-calendar-check"></i>
+        La dépense sera enregistrée à la date d'aujourd'hui ({{ todayStr }}).
+      </div>
+
+      <button class="bcd-btn-primary bcd-btn-full" (click)="ajouterDepense()" [disabled]="ajoutEnCours">
+        @if (ajoutEnCours) { <span class="bcd-spinner"></span> Enregistrement... }
+        @else { <i class="bi bi-plus-lg"></i> Enregistrer la dépense }
+      </button>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════
+         LISTE DES DÉPENSES
+    ══════════════════════════════════════════════════════ -->
+    <div class="bcd-card">
+      <div class="bcd-section-label">Historique des dépenses ({{ depenses.length }})</div>
+
+      @if (depenses.length === 0) {
+        <div class="bcd-empty">
+          <i class="bi bi-receipt"></i>
+          <p>Aucune dépense enregistrée dans cette catégorie.</p>
+        </div>
+      }
+
+      @for (dep of depenses; track dep.id) {
+        <div class="bcd-dep-item" [class.bcd-dep-editing]="depenseEnEdit?.id === dep.id">
+
+          <!-- MODE LECTURE -->
+          @if (depenseEnEdit?.id !== dep.id) {
+            <div class="bcd-dep-row">
+              <div class="bcd-dep-left">
+                <span class="bcd-dep-desc">{{ dep.description }}</span>
+                <span class="bcd-dep-date">
+                  <i class="bi bi-calendar3"></i> {{ dep.date }}
+                  @if (estEditable(dep)) {
+                    <span class="bcd-dep-today">aujourd'hui</span>
+                  }
+                </span>
+              </div>
+              <div class="bcd-dep-right">
+                <span class="bcd-dep-montant">{{ dep.montant | number:'1.0-2' }} DT</span>
+                @if (estEditable(dep)) {
+                  <button class="bcd-dep-action edit" (click)="ouvrirEdit(dep)" title="Modifier">
+                    <i class="bi bi-pencil"></i>
+                  </button>
+                  <button class="bcd-dep-action delete" (click)="supprimerDepense(dep.id!)" title="Supprimer">
+                    <i class="bi bi-trash3"></i>
+                  </button>
+                } @else {
+                  <span class="bcd-dep-locked" title="Modification impossible après le jour d'enregistrement">
+                    <i class="bi bi-lock-fill"></i>
+                  </span>
+                }
+              </div>
+            </div>
+          }
+
+          <!-- MODE ÉDITION -->
+          @if (depenseEnEdit?.id === dep.id) {
+            <div class="bcd-dep-edit-form">
+              <div class="bcd-form-row">
+                <input type="text" class="bcd-input" [(ngModel)]="editDescription"
+                       placeholder="Description" style="flex:2" />
+                <div class="bcd-addon-wrap" style="flex:1">
+                  <input type="number" class="bcd-input bcd-input-addon"
+                         [(ngModel)]="editMontant" min="0" />
+                  <span class="bcd-addon">DT</span>
+                </div>
+              </div>
+              <div class="bcd-edit-actions">
+                <button class="bcd-btn-secondary" (click)="annulerEdit()">Annuler</button>
+                <button class="bcd-btn-primary" (click)="sauvegarderEdit()">
+                  <i class="bi bi-check-lg"></i> Enregistrer
+                </button>
+              </div>
+            </div>
+          }
+
+        </div>
+      }
+    </div>
+
+  }
+
+</div>

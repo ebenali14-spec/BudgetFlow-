@@ -1,37 +1,52 @@
 import { inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
-import { PeriodeBudgetaire } from '../models/periode.model';
+import { Observable, map } from 'rxjs';
+import { Depense, PeriodeBudgetaire } from '../models/periode.model';
 
-@Injectable({
-  providedIn: 'root'
-})
+@Injectable({ providedIn: 'root' })
 export class PeriodeService {
-  private apiUrl = 'http://localhost:8090/periodes';
-
- private readonly http:HttpClient=inject(HttpClient)
-
+  private apiUrl     = 'http://localhost:3000/periodes';
+  private depUrl     = 'http://localhost:3000/depenses';
+  private readonly http = inject(HttpClient);
+updateDepense(depense: Depense): Observable<Depense> {
+  return this.http.put<Depense>(`${this.depUrl}/${depense.id}`, depense);
+}
   getPeriodesByUser(userId: number): Observable<PeriodeBudgetaire[]> {
-    return this.http.get<PeriodeBudgetaire[]>(`${this.apiUrl}/user/${userId}`);
+    return this.http.get<PeriodeBudgetaire[]>(`${this.apiUrl}?utilisateurId=${userId}`);
   }
 
-  getPeriodeById(id: number): Observable<PeriodeBudgetaire> {
+  getPeriodeById(id: number | string): Observable<PeriodeBudgetaire> {
     return this.http.get<PeriodeBudgetaire>(`${this.apiUrl}/${id}`);
   }
 
   createPeriode(periode: any): Observable<PeriodeBudgetaire> {
-    return this.http.post<PeriodeBudgetaire>(`${this.apiUrl}`, periode);
+    return this.http.post<PeriodeBudgetaire>(this.apiUrl, periode);
   }
 
   updatePeriode(periode: any): Observable<PeriodeBudgetaire> {
-    return this.http.put<PeriodeBudgetaire>(`${this.apiUrl}`, periode);
+    return this.http.put<PeriodeBudgetaire>(`${this.apiUrl}/${periode.id}`, periode);
   }
 
-  deletePeriode(id: number): Observable<boolean> {
-    return this.http.delete<boolean>(`${this.apiUrl}/delete/${id}`);
+  deletePeriode(id: number | string): Observable<boolean> {
+    return this.http.delete(`${this.apiUrl}/${id}`).pipe(map(() => true));
   }
-  calculerRepartition(payload: any): Observable<{ pourcentages: Record<string, number>; montants: Record<string, number> }> {
-  return this.http.post<any>(`${this.apiUrl}/calculer-repartition`, payload);
-}
-  
+
+  // Vérifie si l'user a déjà une période ACTIF
+  hasActivePeriode(userId: number): Observable<boolean> {
+    return this.http.get<PeriodeBudgetaire[]>(`${this.apiUrl}?utilisateurId=${userId}&statut=ACTIF`)
+      .pipe(map(list => list.length > 0));
+  }
+
+  // Dépenses
+  getDepensesByPeriode(periodeId: number | string): Observable<Depense[]> {
+    return this.http.get<Depense[]>(`${this.depUrl}?periodeId=${periodeId}`);
+  }
+
+  addDepense(depense: Depense): Observable<Depense> {
+    return this.http.post<Depense>(this.depUrl, depense);
+  }
+
+  deleteDepense(id: number | string): Observable<boolean> {
+    return this.http.delete(`${this.depUrl}/${id}`).pipe(map(() => true));
+  }
 }

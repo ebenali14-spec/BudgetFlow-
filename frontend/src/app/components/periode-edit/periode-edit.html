@@ -1,173 +1,292 @@
-<div class="bf-edit-page">
+<div class="bfe-page">
 
-  <a routerLink="/periodes" class="bf-back-link">
-    <i class="bi bi-arrow-left"></i> Retour à la liste
+  <a routerLink="/periodes" class="bfe-back">
+    <i class="bi bi-arrow-left"></i> Retour
   </a>
 
   @if (loadingData) {
-    <div class="bf-skeleton-header"></div>
-    <div class="bf-skeleton-card">
-      <div class="bf-skeleton-row"></div>
-      <div class="bf-skeleton-row short"></div>
-      <div class="bf-skeleton-row"></div>
+    <div class="bfe-skeleton-header"></div>
+    <div class="bfe-card">
+      <div class="bfe-skeleton-row"></div>
+      <div class="bfe-skeleton-row short"></div>
     </div>
   }
 
   @if (!loadingData) {
 
-    <div class="bf-edit-header">
-      <div class="bf-edit-icon">
-        <i class="bi bi-pencil-square"></i>
-      </div>
+    <!-- HEADER -->
+    <div class="bfe-header">
       <div>
-        <h1 class="bf-edit-title">Modifier la période</h1>
-        <p class="bf-edit-sub">ID #{{ form.id }}</p>
+        <h1 class="bfe-title">
+          @if (periodeEnCours) { Période en cours }
+          @else { Modifier la période }
+        </h1>
+        <p class="bfe-subtitle">ID #{{ form.id }}</p>
       </div>
-      <span class="bf-badge-statut" [ngClass]="{
-        'badge-active':   periodeOriginale?.statut === 'ACTIF',
-        'badge-pause':    periodeOriginale?.statut === 'DESACTIVE',
-        'badge-inactive': periodeOriginale?.statut === 'TERMINE',
-        'badge-sim':      periodeOriginale?.statut === 'SIMULATION'
-      }">{{ periodeOriginale?.statut }}</span>
+      <span class="bfe-statut-badge"
+            [class.badge-actif]="periodeOriginale?.statut === 'ACTIF'"
+            [class.badge-sim]="periodeOriginale?.statut === 'SIMULATION'"
+            [class.badge-pause]="periodeOriginale?.statut === 'DESACTIVE'"
+            [class.badge-fin]="periodeOriginale?.statut === 'TERMINE'">
+        {{ periodeOriginale?.statut }}
+      </span>
     </div>
 
-    <div class="bf-form-card">
+    @if (erreur) { <div class="bfe-alert-error"><i class="bi bi-exclamation-triangle-fill"></i> {{ erreur }}</div> }
+    @if (alerte) { <div class="bfe-alert-warn"><i class="bi bi-info-circle-fill"></i> {{ alerte }}</div> }
 
-      @if (erreur) {
-        <div class="bf-alert-error">
-          <i class="bi bi-exclamation-triangle-fill"></i> {{ erreur }}
-        </div>
-      }
-
-      @if (alerte) {
-        <div class="bf-alert-warn">
-          <i class="bi bi-info-circle-fill"></i> {{ alerte }}
-        </div>
-      }
-
-      @if (estLectureSeule) {
-        <div class="bf-alert-warn">
-          <i class="bi bi-lock-fill"></i>
-          Cette période est {{ periodeOriginale?.statut === 'TERMINE' ? 'terminée' : 'désactivée' }}
-          et ne peut plus être modifiée.
-        </div>
-      }
-
-      <!-- Statut -->
-      <div class="bf-form-group">
-        <label class="bf-label">
-          <i class="bi bi-toggle-on"></i> Statut
-        </label>
-        <div class="bf-statut-group">
-          @for (s of statutsDisponibles; track s.value) {
-            <label class="bf-statut-card"
-                   [class.selected]="form.statut === s.value"
-                   [class.disabled]="estLectureSeule">
-              <input type="radio" name="statut" [value]="s.value"
-                     [(ngModel)]="form.statut"
-                     [disabled]="estLectureSeule"
-                     (change)="onStatutChange()" />
-              <span class="bf-statut-dot" [ngClass]="{
-                'active': s.value === 'ACTIF',
-                'pause':  s.value === 'DESACTIVE',
-                'end':    s.value === 'TERMINE',
-                'sim':    s.value === 'SIMULATION'
-              }"></span>
-              <div>
-                <strong>{{ s.label }}</strong>
-              </div>
-            </label>
-          }
-        </div>
+    @if (estLectureSeule) {
+      <div class="bfe-alert-warn">
+        <i class="bi bi-lock-fill"></i>
+        Période {{ periodeOriginale?.statut === 'TERMINE' ? 'terminée' : 'désactivée' }} — consultation uniquement.
       </div>
+    }
 
-      <!-- Dates -->
-      <div class="bf-form-row">
-        <div class="bf-form-group">
-          <label class="bf-label" for="dateDebut">
-            <i class="bi bi-calendar-event"></i> Date de début
-          </label>
-          <input id="dateDebut" type="date" class="bf-input"
-                 [(ngModel)]="form.dateDebut"
-                 [disabled]="estLectureSeule"
-                 [class.is-invalid]="submitted && !form.dateDebut" />
-          @if (submitted && !form.dateDebut) {
-            <span class="bf-field-error">Champ requis</span>
-          }
+    @if (periodeEnCours) {
+      <div class="bfe-alert-info">
+        <i class="bi bi-play-circle-fill"></i>
+        La période a déjà commencé — les dates, le budget et la répartition ne sont plus modifiables.
+      </div>
+    }
+
+    <!-- ══════════════════════════════════════════════════════
+         INFOS GÉNÉRALES (toujours affiché, locked si en cours)
+    ══════════════════════════════════════════════════════ -->
+    <div class="bfe-card">
+      <div class="bfe-section-label">Informations de base</div>
+
+      <div class="bfe-row-2">
+        <div class="bfe-field">
+          <div class="bfe-label">Date de début</div>
+          <input type="date" class="bfe-input" [(ngModel)]="form.dateDebut"
+                 [disabled]="estLectureSeule || periodeEnCours"
+                 [class.invalid]="submitted && !form.dateDebut" />
         </div>
-
-        <div class="bf-form-group">
-          <label class="bf-label" for="dateFin">
-            <i class="bi bi-calendar-check"></i> Date de fin
-          </label>
-          <input id="dateFin" type="date" class="bf-input"
-                 [(ngModel)]="form.dateFin"
-                 [disabled]="estLectureSeule"
-                 [min]="form.dateDebut"
-                 [class.is-invalid]="submitted && !form.dateFin" />
-          @if (submitted && !form.dateFin) {
-            <span class="bf-field-error">Champ requis</span>
-          }
+        <div class="bfe-field">
+          <div class="bfe-label">Date de fin</div>
+          <input type="date" class="bfe-input" [(ngModel)]="form.dateFin"
+                 [disabled]="estLectureSeule || periodeEnCours" [min]="form.dateDebut"
+                 [class.invalid]="submitted && !form.dateFin" />
         </div>
       </div>
 
       @if (dureeCalculee > 0) {
-        <div class="bf-duree-preview" [class.bf-duree-error]="dureeCalculee < 7">
-          <i class="bi bi-hourglass-split"></i>
-          Durée : <strong>{{ dureeCalculee }} jours</strong>
-          @if (dureeChangee) {
-            <span class="bf-duree-diff">({{ dureeOriginale }}j → {{ dureeCalculee }}j)</span>
-          }
-          @if (dureeCalculee < 7) { — minimum 7 jours requis }
+        <div class="bfe-duree" [class.bfe-duree-warn]="dureeCalculee < 7">
+          <i class="bi bi-hourglass-split"></i> {{ dureeCalculee }} jours
+          @if (dureeChangee) { <span class="bfe-duree-diff">({{ dureeOriginale }}j → {{ dureeCalculee }}j)</span> }
         </div>
       }
 
-      <!-- Budget -->
-      <div class="bf-form-group">
-        <label class="bf-label" for="budget">
-          <i class="bi bi-cash-coin"></i> Budget total
-        </label>
-        <div class="bf-input-addon-wrap">
-          <input id="budget" type="number" class="bf-input bf-input-addon"
+      <div class="bfe-field">
+        <div class="bfe-label">Budget total</div>
+        <div class="bfe-addon-wrap">
+          <input type="number" class="bfe-input bfe-input-addon"
                  [(ngModel)]="form.budgetTotal"
-                 [disabled]="estLectureSeule"
-                 placeholder="ex: 3000" min="1"
-                 [class.is-invalid]="submitted && (!form.budgetTotal || form.budgetTotal <= 0)" />
-          <span class="bf-addon">DT</span>
+                 [disabled]="estLectureSeule || periodeEnCours"
+                 (input)="onBudgetChange()" min="1"
+                 [class.invalid]="submitted && (!form.budgetTotal || form.budgetTotal <= 0)" />
+          <span class="bfe-addon">DT</span>
         </div>
-        @if (submitted && (!form.budgetTotal || form.budgetTotal <= 0)) {
-          <span class="bf-field-error">Entrez un budget positif</span>
-        }
-        @if (periodeOriginale && form.budgetTotal !== periodeOriginale.budgetTotal) {
-          <span class="bf-changed-hint">
-            <i class="bi bi-arrow-left-right"></i>
-            Avant : {{ periodeOriginale.budgetTotal | number:'1.0-0' }} DT
+        @if (!periodeEnCours && periodeOriginale && form.budgetTotal !== periodeOriginale.budgetTotal) {
+          <span class="bfe-changed-hint">
+            <i class="bi bi-arrow-left-right"></i> Avant : {{ periodeOriginale.budgetTotal | number:'1.0-0' }} DT
           </span>
         }
       </div>
+    </div>
 
-      <!-- Actions -->
-      @if (!estLectureSeule) {
-        <div class="bf-form-actions">
-          <button class="bf-btn-reset" (click)="reinitialiser()">
-            <i class="bi bi-arrow-counterclockwise"></i> Réinitialiser
-          </button>
-          <div class="bf-actions-right">
-            <a routerLink="/periodes" class="bf-btn-secondary">
-              <i class="bi bi-x-lg"></i> Annuler
-            </a>
-            <button class="bf-btn-primary" (click)="sauvegarder()" [disabled]="loading">
-              @if (loading) {
-                <span class="bf-spinner"></span> Sauvegarde...
-              } @else {
-                <i class="bi bi-check-lg"></i> Sauvegarder
-              }
+    <!-- ══════════════════════════════════════════════════════
+         CAS 1 : PÉRIODE EN COURS → GRID CATÉGORIES
+    ══════════════════════════════════════════════════════ -->
+    @if (periodeEnCours && lignes.length > 0) {
+      <div class="bfe-card">
+        <div class="bfe-section-label">Catégories budgétaires</div>
+
+        <div class="bfe-cat-grid">
+          @for (ligne of lignes; track ligne.categorieId) {
+            <div class="bfe-cat-card">
+
+              <!-- Badge type -->
+              <div class="bfe-cat-card-top">
+                @if (QUESTIONS_DEFAULT[ligne.categorieId]) {
+                  <span class="bfe-tag-default">Par défaut</span>
+                } @else {
+                  <span class="bfe-tag-perso">Personnalisée</span>
+                }
+                <span class="bfe-cat-pct">{{ ligne.pourcentage }}%</span>
+              </div>
+
+              <!-- Nom -->
+              <div class="bfe-cat-card-nom">{{ ligne.nom }}</div>
+
+              <!-- Couleur dot + barre -->
+              <div class="bfe-cat-card-bar-track">
+                <div class="bfe-cat-card-bar-fill"
+                     [style.width.%]="ligne.pourcentage"
+                     [style.background]="couleurCategorie(ligne.categorieId)">
+                </div>
+              </div>
+
+              <!-- Montants -->
+              <div class="bfe-cat-card-amounts">
+                <div class="bfe-cat-card-amount-main">
+                  {{ ligne.montantAlloue | number:'1.0-0' }} <span class="bfe-dt">DT</span>
+                </div>
+                <div class="bfe-cat-card-amount-label">budget alloué</div>
+              </div>
+
+              <!-- Bouton accéder -->
+              <button class="bfe-btn-acceder"
+                      (click)="accederCategorie(ligne)">
+                Accéder <i class="bi bi-arrow-right"></i>
+              </button>
+
+            </div>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- ══════════════════════════════════════════════════════
+         CAS 2 : PÉRIODE PAS ENCORE COMMENCÉE → RÉPARTITION ÉDITABLE
+    ══════════════════════════════════════════════════════ -->
+    @if (!periodeEnCours && !estLectureSeule && lignes.length > 0) {
+      <div class="bfe-card">
+
+        <div class="bfe-rep-header">
+          <div style="display:flex;align-items:center;gap:8px">
+            <div class="bfe-section-label" style="margin:0">Répartition</div>
+            @if (manualMode) { <span class="bfe-badge-manuel">modifié manuellement</span> }
+          </div>
+          <div style="display:flex;gap:8px">
+            @if (!editMode) {
+              <button class="bfe-btn-edit-mode" (click)="ouvrirEditMode()">✏ Modifier</button>
+            } @else {
+              <button class="bfe-btn-edit-mode active" (click)="fermerEditMode()">✕ Fermer</button>
+            }
+            <button class="bfe-btn-recalc" (click)="toggleQuestionnaire()">
+              <i class="bi bi-arrow-repeat"></i> Recalculer
             </button>
           </div>
         </div>
-      }
 
-    </div>
+        <!-- Barres lecture -->
+        @if (!editMode) {
+          <div class="bfe-bars">
+            @for (ligne of lignes; track ligne.categorieId) {
+              <div class="bfe-bar-row">
+                <span class="bfe-bar-label">{{ ligne.nom }}</span>
+                <div class="bfe-bar-track">
+                  <div class="bfe-bar-fill" [style.width.%]="ligne.pourcentage"
+                       [style.background]="couleurCategorie(ligne.categorieId)"></div>
+                </div>
+                <span class="bfe-bar-pct">{{ ligne.pourcentage }}%</span>
+                <span class="bfe-bar-montant">{{ ligne.montantAlloue | number:'1.0-0' }} DT</span>
+              </div>
+            }
+          </div>
+        }
+
+        <!-- Sliders edit -->
+        @if (editMode) {
+          <div class="bfe-edit-rows">
+            @for (key of getEditKeys(); track key) {
+              <div class="bfe-edit-row">
+                <div class="bfe-edit-dot" [style.background]="couleurCategorie(key)"></div>
+                <span class="bfe-edit-name">{{ key }}</span>
+                <input type="range" class="bfe-slider" min="0" max="100" step="0.5"
+                       [value]="editValues[key]" [class.over]="!totalEditOk && totalEdit > 100"
+                       (input)="onSliderChange(key, $any($event.target).value)" />
+                <input type="number" class="bfe-edit-input" min="0" max="100" step="0.5"
+                       [value]="editValues[key]" [class.error]="!totalEditOk && totalEdit > 100"
+                       (input)="onInputChange(key, $any($event.target).value)" />
+              </div>
+            }
+          </div>
+          <div class="bfe-total-indicator" [class.ok]="totalEditOk"
+               [class.over]="!totalEditOk && totalEdit > 100"
+               [class.under]="!totalEditOk && totalEdit < 100">
+            <span>
+              @if (totalEditOk) { Total ✓ }
+              @else if (totalEdit > 100) { Dépassement de {{ (totalEdit - 100) | number:'1.0-1' }}% }
+              @else { Manque {{ (100 - totalEdit) | number:'1.0-1' }}% }
+            </span>
+            <span class="bfe-total-val">{{ totalEdit }}%</span>
+          </div>
+          <div class="bfe-edit-actions">
+            <button class="bfe-btn-reset-auto" (click)="resetAuto()">↺ Recalculer auto</button>
+            <button class="bfe-btn-apply" [disabled]="!totalEditOk" (click)="appliquerManuel()">✓ Appliquer</button>
+          </div>
+        }
+
+        <!-- Questionnaire recalcul -->
+        @if (showQuestionnaire && !editMode) {
+          <div class="bfe-questionnaire">
+            <div class="bfe-q-label">Recalculer selon vos habitudes (profil PARENT)</div>
+            <div class="bfe-questions-grid">
+              @for (catId of categoriesDefaultKeys; track catId) {
+                <div class="bfe-q-card">
+                  <div class="bfe-q-title">{{ catId }}</div>
+                  <div class="bfe-q-options">
+                    @for (opt of QUESTIONS_DEFAULT[catId].options; track opt.v) {
+                      <button class="bfe-q-opt" [class.selected]="reponses[catId] === opt.v"
+                              (click)="reponses[catId] = opt.v">{{ opt.l }}</button>
+                    }
+                  </div>
+                </div>
+              }
+            </div>
+            <button class="bfe-btn-primary bfe-btn-full"
+                    [disabled]="!toutesRepondues" (click)="recalculer()" style="margin-top:.8rem">
+              <i class="bi bi-calculator"></i> Appliquer le recalcul
+            </button>
+          </div>
+        }
+
+      </div>
+    }
+
+    <!-- Lecture seule : barres simples -->
+    @if (estLectureSeule && lignes.length > 0) {
+      <div class="bfe-card">
+        <div class="bfe-section-label">Répartition</div>
+        <div class="bfe-bars">
+          @for (ligne of lignes; track ligne.categorieId) {
+            <div class="bfe-bar-row">
+              <span class="bfe-bar-label">{{ ligne.nom }}</span>
+              <div class="bfe-bar-track">
+                <div class="bfe-bar-fill" [style.width.%]="ligne.pourcentage"
+                     [style.background]="couleurCategorie(ligne.categorieId)"></div>
+              </div>
+              <span class="bfe-bar-pct">{{ ligne.pourcentage }}%</span>
+              <span class="bfe-bar-montant">{{ ligne.montantAlloue | number:'1.0-0' }} DT</span>
+            </div>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- ══════════════════════════════════════════════════════
+         ACTIONS (pas en cours, pas lecture seule)
+    ══════════════════════════════════════════════════════ -->
+    @if (!estLectureSeule && !periodeEnCours && !editMode) {
+      <div class="bfe-card bfe-actions-card">
+        <div class="bfe-actions-row">
+          <button class="bfe-btn-reset" (click)="reinitialiser()">
+            <i class="bi bi-arrow-counterclockwise"></i> Réinitialiser
+          </button>
+          <div style="display:flex;gap:10px">
+            <a routerLink="/periodes" class="bfe-btn-secondary">
+              <i class="bi bi-x-lg"></i> Annuler
+            </a>
+            <button class="bfe-btn-primary" (click)="sauvegarder()" [disabled]="loading">
+              @if (loading) { <span class="bfe-spinner"></span> Sauvegarde... }
+              @else { <i class="bi bi-check-lg"></i> Sauvegarder }
+            </button>
+          </div>
+        </div>
+      </div>
+    }
+
   }
-
 </div>

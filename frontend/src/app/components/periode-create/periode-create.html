@@ -1,460 +1,359 @@
-<div class="bf-create-page">
-  <a routerLink="/periodes" class="bf-back-link">
-    <i class="bi bi-arrow-left"></i> Retour à la liste
+<div class="bfc-page">
+
+  <!-- ── BACK ── -->
+  <a routerLink="/periodes" class="bfc-back">
+    <i class="bi bi-arrow-left"></i> Retour
   </a>
 
-  <div class="bf-create-header">
-    <div class="bf-create-icon"><i class="bi bi-calendar-plus"></i></div>
-    <div>
-      <h1 class="bf-create-title">Nouvelle période</h1>
-      <p class="bf-create-sub">Configurez et simulez votre répartition budgétaire</p>
-    </div>
+  <div class="bfc-header">
+    <h1 class="bfc-title">Nouvelle période</h1>
+    <p class="bfc-subtitle">Configurez votre budget et simulez votre répartition</p>
   </div>
 
   @if (erreur) {
-    <div class="bf-alert-error">
+    <div class="bfc-alert-error">
       <i class="bi bi-exclamation-triangle-fill"></i> {{ erreur }}
     </div>
   }
+  @if (dejaUnePeriodeActive && form.statut === 'ACTIF') {
+  <div class="bfc-alert-warn">
+    <i class="bi bi-exclamation-triangle-fill"></i>
+    Vous avez déjà une période <strong>active</strong>. 
+    Pour en créer une nouvelle active, désactivez d'abord l'existante.
+    Vous pouvez toujours créer une <strong>simulation</strong>.
+  </div>
+}
 
-  <!-- ── ZONE 1 : Infos de base ── -->
-  <div class="bf-form-card">
-    <div class="bf-section-title">
-      <i class="bi bi-sliders"></i> Informations de base
-    </div>
+  <!-- ══════════════════════════════════════════════════════════
+       ZONE 1 — INFOS GÉNÉRALES
+  ══════════════════════════════════════════════════════════ -->
+  <div class="bfc-card">
+    <div class="bfc-section-label">Informations de base</div>
 
-    <div class="bf-form-group">
-      <label class="bf-label"><i class="bi bi-toggle-on"></i> Type de période</label>
-      <div class="bf-statut-group">
-        <label class="bf-statut-card" [class.selected]="form.statut === 'ACTIF'">
+    <!-- Statut -->
+    <div class="bfc-field">
+      <div class="bfc-label">Type de période</div>
+      <div class="bfc-statut-row">
+        <label class="bfc-statut-pill" [class.active]="form.statut === 'ACTIF'">
           <input type="radio" name="statut" value="ACTIF" [(ngModel)]="form.statut" />
-          <span class="bf-statut-dot active"></span>
-          <div><strong>Actif</strong><small>Période réelle</small></div>
+          <span class="bfc-dot dot-actif"></span> Actif
         </label>
-        <label class="bf-statut-card" [class.selected]="form.statut === 'SIMULATION'">
+        <label class="bfc-statut-pill" [class.active]="form.statut === 'SIMULATION'">
           <input type="radio" name="statut" value="SIMULATION" [(ngModel)]="form.statut" />
-          <span class="bf-statut-dot pause"></span>
-          <div><strong>Simulation</strong><small>Sans impact réel</small></div>
+          <span class="bfc-dot dot-sim"></span> Simulation
         </label>
       </div>
     </div>
 
-    <div class="bf-form-row">
-      <div class="bf-form-group">
-        <label class="bf-label" for="dateDebut">
-          <i class="bi bi-calendar-event"></i> Date de début
-        </label>
-        <input id="dateDebut" type="date" class="bf-input"
-               [(ngModel)]="form.dateDebut" [min]="todayStr"
-               [class.is-invalid]="submitted && !form.dateDebut" />
-        @if (submitted && !form.dateDebut) {
-          <span class="bf-field-error">Champ requis</span>
-        }
+    <!-- Dates -->
+    <div class="bfc-row-2">
+      <div class="bfc-field">
+        <div class="bfc-label">Date de début</div>
+        <input type="date" class="bfc-input" [(ngModel)]="form.dateDebut"
+               [min]="todayStr" [class.invalid]="submitted && !form.dateDebut" />
+        @if (submitted && !form.dateDebut) { <span class="bfc-err">Champ requis</span> }
       </div>
-      <div class="bf-form-group">
-        <label class="bf-label" for="dateFin">
-          <i class="bi bi-calendar-check"></i> Date de fin
-        </label>
-        <input id="dateFin" type="date" class="bf-input"
-               [(ngModel)]="form.dateFin" [min]="form.dateDebut || todayStr"
-               [class.is-invalid]="submitted && !form.dateFin" />
-        @if (submitted && !form.dateFin) {
-          <span class="bf-field-error">Champ requis</span>
-        }
+      <div class="bfc-field">
+        <div class="bfc-label">Date de fin</div>
+        <input type="date" class="bfc-input" [(ngModel)]="form.dateFin"
+               [min]="form.dateDebut || todayStr" [class.invalid]="submitted && !form.dateFin" />
+        @if (submitted && !form.dateFin) { <span class="bfc-err">Champ requis</span> }
       </div>
     </div>
 
     @if (dureeCalculee > 0) {
-      <div class="bf-duree-preview" [class.bf-duree-error]="dureeCalculee < 7">
+      <div class="bfc-duree" [class.bfc-duree-warn]="dureeCalculee < 7">
         <i class="bi bi-hourglass-split"></i>
-        Durée : <strong>{{ dureeCalculee }} jours</strong>
-        @if (dureeCalculee < 7) { — minimum 7 jours requis }
+        {{ dureeCalculee }} jours
+        @if (dureeCalculee < 7) { <span>— minimum 7 jours requis</span> }
       </div>
     }
 
-    <div class="bf-form-group">
-      <label class="bf-label" for="budget">
-        <i class="bi bi-cash-coin"></i> Budget total
-      </label>
-      <div class="bf-input-addon-wrap">
-        <input id="budget" type="number" class="bf-input bf-input-addon"
-               [(ngModel)]="form.budgetTotal" placeholder="ex: 3000" min="1"
-               [class.is-invalid]="submitted && (!form.budgetTotal || form.budgetTotal <= 0)" />
-        <span class="bf-addon">DT</span>
+    <!-- Budget -->
+    <div class="bfc-field">
+      <div class="bfc-label">Budget total</div>
+      <div class="bfc-addon-wrap">
+        <input type="number" class="bfc-input bfc-input-addon" [(ngModel)]="form.budgetTotal"
+               placeholder="ex: 3000" min="1"
+               [class.invalid]="submitted && (!form.budgetTotal || form.budgetTotal <= 0)" />
+        <span class="bfc-addon">DT</span>
       </div>
       @if (submitted && (!form.budgetTotal || form.budgetTotal <= 0)) {
-        <span class="bf-field-error">Entrez un budget positif</span>
+        <span class="bfc-err">Entrez un budget positif</span>
       }
     </div>
   </div>
 
-  <!-- ── ZONE 2 : Questionnaire ── -->
-  <div class="bf-form-card">
-    <div class="bf-section-title">
-      <i class="bi bi-patch-question"></i> Questionnaire de répartition
-    </div>
-    <p class="bf-section-sub">
-      Répondez aux questions pour chaque catégorie. Excluez celles qui ne vous concernent pas.
-    </p>
+  <!-- ══════════════════════════════════════════════════════════
+       ZONE 2 — PROFIL + QUESTIONS
+  ══════════════════════════════════════════════════════════ -->
+  <div class="bfc-card">
+    <div class="bfc-section-label">Questionnaire de répartition</div>
 
-    @for (cat of categories; track cat.id) {
-      <div class="bf-cat-block" [class.exclue]="cat.exclue">
+    <!-- Profil -->
 
-        <div class="bf-cat-header">
-          <span class="bf-cat-nom">
-            {{ cat.nom }}
-            @if (!cat.estParDefaut) {
-              <span class="bf-badge-perso">perso</span>
-            }
-          </span>
-          <button class="bf-btn-exclure"
-                  (click)="cat.exclue = !cat.exclue; onReponseChange()">
-            @if (cat.exclue) {
-              <i class="bi bi-plus-circle"></i> Inclure
-            } @else {
-              <i class="bi bi-dash-circle"></i> Exclure
-            }
-          </button>
-        </div>
 
+    <!-- Grid questions -->
+    <div class="bfc-questions-grid">
+
+      @for (cat of categories; track cat.id) {
         @if (!cat.exclue) {
+          <div class="bfc-q-card" [class.bfc-q-card-perso]="!cat.estParDefaut">
 
-          <!-- ── Catégorie DEFAULT ── -->
-          @if (cat.estParDefaut) {
-
-            <!-- LOGEMENT -->
-            @if (cat.id === 'LOGEMENT') {
-              <div class="bf-question">
-                <div class="bf-question-label">Votre situation de logement ?</div>
-                <div class="bf-options-row">
-                  <label class="bf-opt-btn" [class.selected]="cat.reponse === 'PROPRIETAIRE'">
-                    <input type="radio" [name]="'q_' + cat.id" value="PROPRIETAIRE"
-                           [(ngModel)]="cat.reponse" (change)="onReponseChange()" />
-                    Propriétaire
-                  </label>
-                  <label class="bf-opt-btn" [class.selected]="cat.reponse === 'LOCATAIRE'">
-                    <input type="radio" [name]="'q_' + cat.id" value="LOCATAIRE"
-                           [(ngModel)]="cat.reponse" (change)="onReponseChange()" />
-                    Locataire
-                  </label>
-                  <label class="bf-opt-btn" [class.selected]="cat.reponse === 'COLOCATION'">
-                    <input type="radio" [name]="'q_' + cat.id" value="COLOCATION"
-                           [(ngModel)]="cat.reponse" (change)="onReponseChange()" />
-                    Colocation
-                  </label>
-                </div>
-              </div>
-            }
-
-            <!-- TRANSPORT -->
-            @if (cat.id === 'TRANSPORT') {
-              <div class="bf-question">
-                <div class="bf-question-label">Votre moyen de transport principal ?</div>
-                <div class="bf-options-row">
-                  <label class="bf-opt-btn" [class.selected]="cat.reponse === 'VOITURE'">
-                    <input type="radio" [name]="'q_' + cat.id" value="VOITURE"
-                           [(ngModel)]="cat.reponse" (change)="onReponseChange()" />
-                    Voiture
-                  </label>
-                  <label class="bf-opt-btn" [class.selected]="cat.reponse === 'TRANSPORT_COMMUN'">
-                    <input type="radio" [name]="'q_' + cat.id" value="TRANSPORT_COMMUN"
-                           [(ngModel)]="cat.reponse" (change)="onReponseChange()" />
-                    Transports en commun
-                  </label>
-                  <label class="bf-opt-btn" [class.selected]="cat.reponse === 'VELO'">
-                    <input type="radio" [name]="'q_' + cat.id" value="VELO"
-                           [(ngModel)]="cat.reponse" (change)="onReponseChange()" />
-                    Vélo / Marche
-                  </label>
-                </div>
-              </div>
-            }
-
-            <!-- ALIMENTATION -->
-            @if (cat.id === 'ALIMENTATION') {
-              <div class="bf-question">
-                <div class="bf-question-label">Vos habitudes alimentaires ?</div>
-                <div class="bf-options-row">
-                  <label class="bf-opt-btn" [class.selected]="cat.reponse === 'CUISINE'">
-                    <input type="radio" [name]="'q_' + cat.id" value="CUISINE"
-                           [(ngModel)]="cat.reponse" (change)="onReponseChange()" />
-                    Je cuisine
-                  </label>
-                  <label class="bf-opt-btn" [class.selected]="cat.reponse === 'MIXTE'">
-                    <input type="radio" [name]="'q_' + cat.id" value="MIXTE"
-                           [(ngModel)]="cat.reponse" (change)="onReponseChange()" />
-                    Mixte
-                  </label>
-                  <label class="bf-opt-btn" [class.selected]="cat.reponse === 'RESTAURANT'">
-                    <input type="radio" [name]="'q_' + cat.id" value="RESTAURANT"
-                           [(ngModel)]="cat.reponse" (change)="onReponseChange()" />
-                    Restaurant
-                  </label>
-                </div>
-              </div>
-            }
-
-            <!-- LOISIRS -->
-            @if (cat.id === 'LOISIRS') {
-              <div class="bf-question">
-                <div class="bf-question-label">Vos dépenses en loisirs ?</div>
-                <div class="bf-options-row">
-                  <label class="bf-opt-btn" [class.selected]="cat.reponse === 'PEU'">
-                    <input type="radio" [name]="'q_' + cat.id" value="PEU"
-                           [(ngModel)]="cat.reponse" (change)="onReponseChange()" />
-                    Peu
-                  </label>
-                  <label class="bf-opt-btn" [class.selected]="cat.reponse === 'MODERE'">
-                    <input type="radio" [name]="'q_' + cat.id" value="MODERE"
-                           [(ngModel)]="cat.reponse" (change)="onReponseChange()" />
-                    Modéré
-                  </label>
-                  <label class="bf-opt-btn" [class.selected]="cat.reponse === 'BEAUCOUP'">
-                    <input type="radio" [name]="'q_' + cat.id" value="BEAUCOUP"
-                           [(ngModel)]="cat.reponse" (change)="onReponseChange()" />
-                    Beaucoup
-                  </label>
-                </div>
-              </div>
-            }
-
-            <!-- SANTE -->
-            @if (cat.id === 'SANTE') {
-              <div class="bf-question">
-                <div class="bf-question-label">Vos dépenses de santé ?</div>
-                <div class="bf-options-row">
-                  <label class="bf-opt-btn" [class.selected]="cat.reponse === 'BONNE'">
-                    <input type="radio" [name]="'q_' + cat.id" value="BONNE"
-                           [(ngModel)]="cat.reponse" (change)="onReponseChange()" />
-                    Bonne santé
-                  </label>
-                  <label class="bf-opt-btn" [class.selected]="cat.reponse === 'COURANTE'">
-                    <input type="radio" [name]="'q_' + cat.id" value="COURANTE"
-                           [(ngModel)]="cat.reponse" (change)="onReponseChange()" />
-                    Courante
-                  </label>
-                  <label class="bf-opt-btn" [class.selected]="cat.reponse === 'ELEVEE'">
-                    <input type="radio" [name]="'q_' + cat.id" value="ELEVEE"
-                           [(ngModel)]="cat.reponse" (change)="onReponseChange()" />
-                    Élevée
-                  </label>
-                </div>
-              </div>
-            }
-
-          }
-
-          <!-- ── Catégorie PERSO : 3 questions ── -->
-          @if (!cat.estParDefaut) {
-            <div class="bf-question">
-              <div class="bf-question-label">
-                À quelle fréquence dépensez-vous dans cette catégorie ?
-              </div>
-              <div class="bf-options-row">
-                <label class="bf-opt-btn" [class.selected]="cat.frequence === 'RAREMENT'">
-                  <input type="radio" [name]="'freq_' + cat.id" value="RAREMENT"
-                         [(ngModel)]="cat.frequence" (change)="onReponseChange()" />
-                  Rarement
-                </label>
-                <label class="bf-opt-btn" [class.selected]="cat.frequence === 'PARFOIS'">
-                  <input type="radio" [name]="'freq_' + cat.id" value="PARFOIS"
-                         [(ngModel)]="cat.frequence" (change)="onReponseChange()" />
-                  Parfois
-                </label>
-                <label class="bf-opt-btn" [class.selected]="cat.frequence === 'SOUVENT'">
-                  <input type="radio" [name]="'freq_' + cat.id" value="SOUVENT"
-                         [(ngModel)]="cat.frequence" (change)="onReponseChange()" />
-                  Souvent
-                </label>
-              </div>
+            <div class="bfc-q-header">
+              <span class="bfc-q-title">
+                {{ cat.nom }}
+                @if (!cat.estParDefaut) { <span class="bfc-tag-perso">perso</span> }
+              </span>
+              <button class="bfc-btn-exclure" (click)="toggleExclure(cat)">
+                <i class="bi bi-dash-circle"></i>
+              </button>
             </div>
 
-            <div class="bf-question">
-              <div class="bf-question-label">
-                Est-ce une dépense essentielle ou optionnelle ?
+            <!-- Catégorie default : 1 question -->
+            @if (cat.estParDefaut) {
+              <div class="bfc-q-options">
+                @for (opt of QUESTIONS_DEFAULT[cat.id].options; track opt.v) {
+                  <button class="bfc-q-opt" [class.selected]="cat.reponse === opt.v"
+                          (click)="cat.reponse = opt.v; onReponseChange()">
+                    {{ opt.l }}
+                  </button>
+                }
               </div>
-              <div class="bf-options-row">
-                <label class="bf-opt-btn" [class.selected]="cat.essentialite === 'OPTIONNELLE'">
-                  <input type="radio" [name]="'ess_' + cat.id" value="OPTIONNELLE"
-                         [(ngModel)]="cat.essentialite" (change)="onReponseChange()" />
-                  Optionnelle
-                </label>
-                <label class="bf-opt-btn" [class.selected]="cat.essentialite === 'UTILE'">
-                  <input type="radio" [name]="'ess_' + cat.id" value="UTILE"
-                         [(ngModel)]="cat.essentialite" (change)="onReponseChange()" />
-                  Utile
-                </label>
-                <label class="bf-opt-btn" [class.selected]="cat.essentialite === 'ESSENTIELLE'">
-                  <input type="radio" [name]="'ess_' + cat.id" value="ESSENTIELLE"
-                         [(ngModel)]="cat.essentialite" (change)="onReponseChange()" />
-                  Essentielle
-                </label>
+            }
+
+            <!-- Catégorie perso : 3 mini-questions -->
+            @if (!cat.estParDefaut) {
+              <div class="bfc-mini-q">
+                <div class="bfc-mini-label">Fréquence</div>
+                <div class="bfc-q-options">
+                  <button class="bfc-q-opt" [class.selected]="cat.frequence === 'RAREMENT'"
+                          (click)="cat.frequence = 'RAREMENT'; onReponseChange()">Rarement</button>
+                  <button class="bfc-q-opt" [class.selected]="cat.frequence === 'PARFOIS'"
+                          (click)="cat.frequence = 'PARFOIS'; onReponseChange()">Parfois</button>
+                  <button class="bfc-q-opt" [class.selected]="cat.frequence === 'SOUVENT'"
+                          (click)="cat.frequence = 'SOUVENT'; onReponseChange()">Souvent</button>
+                </div>
               </div>
+              <div class="bfc-mini-q">
+                <div class="bfc-mini-label">Essentialité</div>
+                <div class="bfc-q-options">
+                  <button class="bfc-q-opt" [class.selected]="cat.essentialite === 'OPTIONNELLE'"
+                          (click)="cat.essentialite = 'OPTIONNELLE'; onReponseChange()">Optionnelle</button>
+                  <button class="bfc-q-opt" [class.selected]="cat.essentialite === 'UTILE'"
+                          (click)="cat.essentialite = 'UTILE'; onReponseChange()">Utile</button>
+                  <button class="bfc-q-opt" [class.selected]="cat.essentialite === 'ESSENTIELLE'"
+                          (click)="cat.essentialite = 'ESSENTIELLE'; onReponseChange()">Essentielle</button>
+                </div>
+              </div>
+              <div class="bfc-mini-q">
+                <div class="bfc-mini-label">Montant estimé</div>
+                <div class="bfc-q-options">
+                  <button class="bfc-q-opt" [class.selected]="cat.montantNiveau === 'FAIBLE'"
+                          (click)="cat.montantNiveau = 'FAIBLE'; onReponseChange()">&lt; 50 DT</button>
+                  <button class="bfc-q-opt" [class.selected]="cat.montantNiveau === 'MOYEN'"
+                          (click)="cat.montantNiveau = 'MOYEN'; onReponseChange()">50–150 DT</button>
+                  <button class="bfc-q-opt" [class.selected]="cat.montantNiveau === 'ELEVE'"
+                          (click)="cat.montantNiveau = 'ELEVE'; onReponseChange()">&gt; 150 DT</button>
+                </div>
+              </div>
+            }
+
+          </div>
+        }
+      }
+
+      <!-- Catégories exclues (chips) -->
+      @for (cat of categories; track cat.id) {
+        @if (cat.exclue) {
+          <div class="bfc-q-card bfc-q-exclue">
+            <div class="bfc-q-header">
+              <span class="bfc-q-title" style="opacity:.5">{{ cat.nom }}</span>
+              <button class="bfc-btn-inclure" (click)="toggleExclure(cat)">
+                <i class="bi bi-plus-circle"></i> Inclure
+              </button>
             </div>
-
-            <div class="bf-question">
-              <div class="bf-question-label">Quel montant mensuel estimez-vous ?</div>
-              <div class="bf-options-row">
-                <label class="bf-opt-btn" [class.selected]="cat.montant === 'FAIBLE'">
-                  <input type="radio" [name]="'montant_' + cat.id" value="FAIBLE"
-                         [(ngModel)]="cat.montant" (change)="onReponseChange()" />
-                  Faible (&lt; 50 DT)
-                </label>
-                <label class="bf-opt-btn" [class.selected]="cat.montant === 'MOYEN'">
-                  <input type="radio" [name]="'montant_' + cat.id" value="MOYEN"
-                         [(ngModel)]="cat.montant" (change)="onReponseChange()" />
-                  Moyen (50–150 DT)
-                </label>
-                <label class="bf-opt-btn" [class.selected]="cat.montant === 'ELEVE'">
-                  <input type="radio" [name]="'montant_' + cat.id" value="ELEVE"
-                         [(ngModel)]="cat.montant" (change)="onReponseChange()" />
-                  Élevé (&gt; 150 DT)
-                </label>
-              </div>
-            </div>
-          }
-
-        }
-      </div>
-    }
-
-    <!-- Ajouter catégorie perso -->
-    @if (!ajoutCategorieVisible) {
-      <button class="bf-btn-add-cat" (click)="afficherAjoutCategorie()">
-        <i class="bi bi-plus-lg"></i> Ajouter une catégorie personnalisée
-      </button>
-    }
-
-    @if (ajoutCategorieVisible) {
-      <div class="bf-add-cat-block">
-        <div class="bf-section-title" style="font-size:0.85rem">
-          Nouvelle catégorie personnalisée
-        </div>
-
-        @if (erreurAjout) {
-          <div class="bf-alert-error">
-            <i class="bi bi-exclamation-triangle-fill"></i> {{ erreurAjout }}
           </div>
         }
+      }
 
-        <div class="bf-form-group">
-          <label class="bf-label">Nom de la catégorie</label>
-          <input type="text" class="bf-input"
-                 [(ngModel)]="nouvelleCategorie.nom"
-                 placeholder="ex: Animaux, Abonnements..." />
-        </div>
-
-        <div class="bf-question">
-          <div class="bf-question-label">
-            À quelle fréquence dépensez-vous dans cette catégorie ?
-          </div>
-          <div class="bf-options-row">
-            <label class="bf-opt-btn" [class.selected]="nouvelleCategorie.frequence === 'RAREMENT'">
-              <input type="radio" name="new_freq" value="RAREMENT"
-                     [(ngModel)]="nouvelleCategorie.frequence" /> Rarement
-            </label>
-            <label class="bf-opt-btn" [class.selected]="nouvelleCategorie.frequence === 'PARFOIS'">
-              <input type="radio" name="new_freq" value="PARFOIS"
-                     [(ngModel)]="nouvelleCategorie.frequence" /> Parfois
-            </label>
-            <label class="bf-opt-btn" [class.selected]="nouvelleCategorie.frequence === 'SOUVENT'">
-              <input type="radio" name="new_freq" value="SOUVENT"
-                     [(ngModel)]="nouvelleCategorie.frequence" /> Souvent
-            </label>
-          </div>
-        </div>
-
-        <div class="bf-question">
-          <div class="bf-question-label">
-            Est-ce une dépense essentielle ou optionnelle ?
-          </div>
-          <div class="bf-options-row">
-            <label class="bf-opt-btn" [class.selected]="nouvelleCategorie.essentialite === 'OPTIONNELLE'">
-              <input type="radio" name="new_ess" value="OPTIONNELLE"
-                     [(ngModel)]="nouvelleCategorie.essentialite" /> Optionnelle
-            </label>
-            <label class="bf-opt-btn" [class.selected]="nouvelleCategorie.essentialite === 'UTILE'">
-              <input type="radio" name="new_ess" value="UTILE"
-                     [(ngModel)]="nouvelleCategorie.essentialite" /> Utile
-            </label>
-            <label class="bf-opt-btn" [class.selected]="nouvelleCategorie.essentialite === 'ESSENTIELLE'">
-              <input type="radio" name="new_ess" value="ESSENTIELLE"
-                     [(ngModel)]="nouvelleCategorie.essentialite" /> Essentielle
-            </label>
-          </div>
-        </div>
-
-        <div class="bf-question">
-          <div class="bf-question-label">Quel montant mensuel estimez-vous ?</div>
-          <div class="bf-options-row">
-            <label class="bf-opt-btn" [class.selected]="nouvelleCategorie.montant === 'FAIBLE'">
-              <input type="radio" name="new_montant" value="FAIBLE"
-                     [(ngModel)]="nouvelleCategorie.montant" /> Faible (&lt; 50 DT)
-            </label>
-            <label class="bf-opt-btn" [class.selected]="nouvelleCategorie.montant === 'MOYEN'">
-              <input type="radio" name="new_montant" value="MOYEN"
-                     [(ngModel)]="nouvelleCategorie.montant" /> Moyen (50–150 DT)
-            </label>
-            <label class="bf-opt-btn" [class.selected]="nouvelleCategorie.montant === 'ELEVE'">
-              <input type="radio" name="new_montant" value="ELEVE"
-                     [(ngModel)]="nouvelleCategorie.montant" /> Élevé (&gt; 150 DT)
-            </label>
-          </div>
-        </div>
-
-        <div class="bf-form-actions" style="margin-top:1rem">
-          <button class="bf-btn-secondary" (click)="annulerAjout()">Annuler</button>
-          <button class="bf-btn-primary" (click)="ajouterCategorie()">
-            <i class="bi bi-plus-lg"></i> Ajouter
-          </button>
-        </div>
-      </div>
-    }
-
-    <div style="margin-top:1.5rem">
-      <button class="bf-btn-primary" style="width:100%"
-              [disabled]="!formulaireComplet || loadingRepartition"
-              (click)="calculerRepartition()">
-        @if (loadingRepartition) {
-          <span class="bf-spinner"></span> Calcul en cours...
-        } @else {
-          <i class="bi bi-calculator"></i> Calculer la répartition
-        }
-      </button>
     </div>
+
+    <!-- Bouton ajouter catégorie -->
+    <button class="bfc-btn-add" (click)="ouvrirModal()">
+      <i class="bi bi-plus-lg"></i> Ajouter une catégorie personnalisée
+    </button>
+
+    <!-- Bouton calculer -->
+    <button class="bfc-btn-primary bfc-btn-full"
+            [disabled]="!toutesRepondues"
+            (click)="calculerRepartition()" style="margin-top: 1rem;">
+      <i class="bi bi-calculator"></i> Calculer la répartition
+    </button>
+
   </div>
 
-  <!-- ── ZONE 3 : Répartition ── -->
-  @if (repartitionChargee) {
-    <div class="bf-form-card">
-      <div class="bf-section-title">
-        <i class="bi bi-pie-chart"></i> Répartition proposée
+  <!-- ══════════════════════════════════════════════════════════
+       ZONE 3 — RÉPARTITION
+  ══════════════════════════════════════════════════════════ -->
+  @if (repartitionPrete) {
+    <div class="bfc-card">
+
+      <div class="bfc-rep-header">
+        <div style="display:flex;align-items:center;gap:8px">
+          <div class="bfc-section-label" style="margin:0">Répartition</div>
+          @if (manualMode) { <span class="bfc-badge-manuel">modifié manuellement</span> }
+        </div>
+        @if (!editMode) {
+          <button class="bfc-btn-edit-mode" (click)="ouvrirEditMode()">
+            ✏ Modifier manuellement
+          </button>
+        } @else {
+          <button class="bfc-btn-edit-mode active" (click)="fermerEditMode()">
+            ✕ Fermer
+          </button>
+        }
       </div>
 
-      @for (ligne of repartition; track ligne.categorie) {
-        <div class="bf-repartition-row">
-          <span class="bf-rep-nom">{{ ligne.categorie }}</span>
-          <div class="bf-rep-bar-wrap">
-            <div class="bf-rep-bar" [style.width.%]="ligne.pourcentage"></div>
-          </div>
-          <span class="bf-rep-pct">{{ ligne.pourcentage }}%</span>
-          <span class="bf-rep-montant">{{ ligne.montant | number:'1.0-2' }} DT</span>
+      <!-- MODE LECTURE : barres -->
+      @if (!editMode) {
+        <div class="bfc-bars">
+          @for (ligne of repartition; track ligne.categorieId) {
+            <div class="bfc-bar-row">
+              <span class="bfc-bar-label">{{ ligne.nom }}</span>
+              <div class="bfc-bar-track">
+                <div class="bfc-bar-fill"
+                     [style.width.%]="ligne.pourcentage"
+                     [style.background]="couleurCategorie(ligne.categorieId)"></div>
+              </div>
+              <span class="bfc-bar-pct">{{ ligne.pourcentage }}%</span>
+              <span class="bfc-bar-montant">{{ ligne.montantAlloue | number:'1.0-0' }} DT</span>
+            </div>
+          }
+        </div>
+        <div class="bfc-status-line">Total : 100% — plan prêt</div>
+      }
+
+      <!-- MODE ÉDITION MANUELLE : sliders -->
+      @if (editMode) {
+        <div class="bfc-edit-rows">
+          @for (key of getEditKeys(); track key) {
+            <div class="bfc-edit-row">
+              <div class="bfc-edit-dot"
+                   [style.background]="couleurCategorie(repartition[0].categorieId)"></div>
+              <span class="bfc-edit-name">{{ key }}</span>
+              <input type="range" class="bfc-slider" min="0" max="100" step="0.5"
+                     [value]="editValues[key]"
+                     [class.over]="!totalEditOk && totalEdit > 100"
+                     (input)="onSliderChange(key, $any($event.target).value)" />
+              <input type="number" class="bfc-edit-input" min="0" max="100" step="0.5"
+                     [value]="editValues[key]"
+                     [class.error]="!totalEditOk && totalEdit > 100"
+                     (input)="onInputChange(key, $any($event.target).value)" />
+            </div>
+          }
+        </div>
+
+        <!-- Total indicator -->
+        <div class="bfc-total-indicator"
+             [class.ok]="totalEditOk"
+             [class.over]="!totalEditOk && totalEdit > 100"
+             [class.under]="!totalEditOk && totalEdit < 100">
+          <span>
+            @if (totalEditOk) { Total ✓ }
+            @else if (totalEdit > 100) { Dépassement de {{ (totalEdit - 100) | number:'1.0-1' }}% }
+            @else { Manque {{ (100 - totalEdit) | number:'1.0-1' }}% }
+          </span>
+          <span class="bfc-total-val">{{ totalEdit }}%</span>
+        </div>
+
+        <div class="bfc-edit-actions">
+          <button class="bfc-btn-reset-auto" (click)="resetAuto()">↺ Recalculer auto</button>
+          <button class="bfc-btn-apply" [disabled]="!totalEditOk" (click)="appliquerManuel()">
+            ✓ Appliquer
+          </button>
         </div>
       }
 
-      <div class="bf-form-actions" style="margin-top:1.5rem">
-        <a routerLink="/periodes" class="bf-btn-secondary">
-          <i class="bi bi-x-lg"></i> Annuler
-        </a>
-        <button class="bf-btn-primary" (click)="creerPeriode()" [disabled]="loading">
-          @if (loading) {
-            <span class="bf-spinner"></span> Création...
-          } @else {
-            <i class="bi bi-check-lg"></i> Valider et créer
-          }
-        </button>
-      </div>
+      <!-- Actions finales -->
+      @if (!editMode) {
+        <div class="bfc-form-actions">
+          <a routerLink="/periodes" class="bfc-btn-secondary">
+            <i class="bi bi-x-lg"></i> Annuler
+          </a>
+          <button class="bfc-btn-primary" (click)="creerPeriode()" [disabled]="loading">
+            @if (loading) { <span class="bfc-spinner"></span> Création... }
+            @else { <i class="bi bi-check-lg"></i> Valider et créer }
+          </button>
+        </div>
+      }
+
     </div>
   }
 
 </div>
+
+<!-- ══════════════════════════════════════════════════════════
+     MODAL — Ajouter catégorie perso
+══════════════════════════════════════════════════════════ -->
+@if (modalVisible) {
+  <div class="bfc-overlay" (click)="fermerModal()">
+    <div class="bfc-modal" (click)="$event.stopPropagation()">
+
+      <h2 class="bfc-modal-title">Nouvelle catégorie</h2>
+      <p class="bfc-modal-sub">Le score sera calculé selon vos réponses et recalibré avec les autres catégories.</p>
+
+      @if (modalErreur) {
+        <div class="bfc-alert-error" style="margin-bottom:1rem">{{ modalErreur }}</div>
+      }
+
+      <div class="bfc-label">Nom de la catégorie</div>
+      <input type="text" class="bfc-input" [(ngModel)]="nouvelleCategorie.nom"
+             placeholder="ex: Abonnements, Animaux…" style="margin-bottom:1.2rem" />
+
+      <div class="bfc-mini-q">
+        <div class="bfc-mini-label">À quelle fréquence dépensez-vous dans cette catégorie ?</div>
+        <div class="bfc-q-options">
+          <button class="bfc-q-opt" [class.selected]="nouvelleCategorie.frequence === 'RAREMENT'"
+                  (click)="nouvelleCategorie.frequence = 'RAREMENT'">Rarement</button>
+          <button class="bfc-q-opt" [class.selected]="nouvelleCategorie.frequence === 'PARFOIS'"
+                  (click)="nouvelleCategorie.frequence = 'PARFOIS'">Parfois</button>
+          <button class="bfc-q-opt" [class.selected]="nouvelleCategorie.frequence === 'SOUVENT'"
+                  (click)="nouvelleCategorie.frequence = 'SOUVENT'">Souvent</button>
+        </div>
+      </div>
+
+      <div class="bfc-mini-q">
+        <div class="bfc-mini-label">Est-ce une dépense essentielle ou optionnelle ?</div>
+        <div class="bfc-q-options">
+          <button class="bfc-q-opt" [class.selected]="nouvelleCategorie.essentialite === 'OPTIONNELLE'"
+                  (click)="nouvelleCategorie.essentialite = 'OPTIONNELLE'">Optionnelle</button>
+          <button class="bfc-q-opt" [class.selected]="nouvelleCategorie.essentialite === 'UTILE'"
+                  (click)="nouvelleCategorie.essentialite = 'UTILE'">Utile</button>
+          <button class="bfc-q-opt" [class.selected]="nouvelleCategorie.essentialite === 'ESSENTIELLE'"
+                  (click)="nouvelleCategorie.essentialite = 'ESSENTIELLE'">Essentielle</button>
+        </div>
+      </div>
+
+      <div class="bfc-mini-q">
+        <div class="bfc-mini-label">Quel montant mensuel estimez-vous ?</div>
+        <div class="bfc-q-options">
+          <button class="bfc-q-opt" [class.selected]="nouvelleCategorie.montantNiveau === 'FAIBLE'"
+                  (click)="nouvelleCategorie.montantNiveau = 'FAIBLE'">Faible (&lt; 50 DT)</button>
+          <button class="bfc-q-opt" [class.selected]="nouvelleCategorie.montantNiveau === 'MOYEN'"
+                  (click)="nouvelleCategorie.montantNiveau = 'MOYEN'">Moyen (50–150 DT)</button>
+          <button class="bfc-q-opt" [class.selected]="nouvelleCategorie.montantNiveau === 'ELEVE'"
+                  (click)="nouvelleCategorie.montantNiveau = 'ELEVE'">&gt; 150 DT</button>
+        </div>
+      </div>
+
+      <div class="bfc-modal-actions">
+        <button class="bfc-btn-secondary" (click)="fermerModal()">Annuler</button>
+        <button class="bfc-btn-primary" (click)="ajouterCategorie()">
+          <i class="bi bi-plus-lg"></i> Ajouter
+        </button>
+      </div>
+
+    </div>
+  </div>
+}
