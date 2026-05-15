@@ -1,13 +1,13 @@
 import { Component, OnInit } from '@angular/core';
 import { Depense, LigneBudget, PeriodeBudgetaire } from '../../models/periode.model';
 import { PeriodeService } from '../../services/periode.service';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { CommonModule, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-categorie-detail',
-  imports: [CommonModule, DecimalPipe, FormsModule, RouterLink],
+  imports: [CommonModule, DecimalPipe, FormsModule],
   templateUrl: './categorie-detail.html',
   styleUrl: './categorie-detail.css',
 })
@@ -25,14 +25,17 @@ export class CategorieDetail implements OnInit {
   succes       = '';
 
   // Formulaire ajout
-  nouvelleDepense = { description: '', montant: null as number | null, date: '' };
+  nouvelleDepense = { description: '', montant: null as number | null };
   ajoutEnCours    = false;
   erreurForm      = '';
+  warnForm        = '';   // warning seuil journalier (non bloquant)
 
-  // Édition
-  depenseEnEdit:    Depense | null = null;
-  editDescription = '';
+  // Édition inline
+  depenseEnEdit:   Depense | null = null;
+  editDescription  = '';
   editMontant:     number | null  = null;
+  erreurEdit       = '';
+  warnEdit         = '';  // warning seuil journalier (non bloquant)
 
   readonly COLORS: Record<string, string> = {
     LOGEMENT: '#2d6a4f', TRANSPORT: '#1a5276', ALIMENTATION: '#784212',
@@ -63,7 +66,7 @@ export class CategorieDetail implements OnInit {
       this.depenses    = [];
       this.depenseEnEdit = null;
       this.loadingData = true;
-      this.nouvelleDepense = { description: '', montant: null, date: this.todayStr };
+      this.nouvelleDepense = { description: '', montant: null };
 
       this.periodeService.getPeriodeById(this.periodeId).subscribe({
         next: data => {
@@ -76,20 +79,33 @@ export class CategorieDetail implements OnInit {
     });
   }
 
-  chargerDepenses(): void {
-    this.periodeService.getDepensesByPeriode(this.periodeId).subscribe({
-      next: deps => {
-        this.depenses    = deps.filter(d => d.categorieId === this.categorieId)
-                              .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-        this.loadingData = false;
-      },
-      error: () => { this.erreur = 'Impossible de charger les dépenses.'; this.loadingData = false; }
-    });
-  }
+chargerDepenses(): void {
+  this.periodeService.getDepensesByPeriode(this.periodeId).subscribe({
+    next: deps => {
 
+      const filtered = deps
+        .filter(d => d.categorieId === this.categorieId);
+
+      this.depenses = filtered.map(d => ({
+        ...d,
+        editable: this.estEditable(d)
+      }));
+
+      console.log('DEPENSES FINAL:', this.depenses);
+
+      this.loadingData = false;
+    },
+    error: () => {
+      this.erreur = 'Impossible de charger les dépenses.';
+      this.loadingData = false;
+    }
+  });
+}
   // ── Helpers ───────────────────────────────────────────────────
-  get todayStr(): string { return new Date().toISOString().split('T')[0]; }
-
+get todayStr(): string {
+  const d = new Date();
+  return `${d.getFullYear()}-${(d.getMonth()+1).toString().padStart(2,'0')}-${d.getDate().toString().padStart(2,'0')}`;
+}
   get couleur(): string { return this.COLORS[this.categorieId] ?? this.COLORS_CUSTOM; }
 
   get montantDepense(): number {
@@ -116,22 +132,67 @@ export class CategorieDetail implements OnInit {
     return Math.min(100, Math.round(this.montantDepense * 100 / this.ligne.montantAlloue));
   }
 
-  // Une dépense est éditable seulement si elle a été créée aujourd'hui
-  estEditable(dep: Depense): boolean {
-    return dep.date === this.todayStr;
+estEditable(dep: Depense): boolean {
+  console.log('today:', new Date());
+  console.log('dep.date:', dep.date);
+
+  const depDate = new Date(dep.date);
+
+  const depDay = depDate.getFullYear() + '-' +
+    String(depDate.getMonth() + 1).padStart(2, '0') + '-' +
+    String(depDate.getDate()).padStart(2, '0');
+
+  const today = new Date();
+  const todayStr = today.getFullYear() + '-' +
+    String(today.getMonth() + 1).padStart(2, '0') + '-' +
+    String(today.getDate()).padStart(2, '0');
+
+  const result = depDay === todayStr;
+
+  console.log('editable:', result);
+
+  return result;
+}
+  // ── Warnings seuil (appelés à chaque input change) ────────────
+  onMontantAjoutChange(): void {
+    this.warnForm = '';
+    const m = this.nouvelleDepense.montant;
+    if (m && m > 0 && m > this.seuilJournalier) {
+      this.warnForm = `Ce montant dépasse votre seuil journalier de ${this.seuilJournalier.toFixed(2)} DT.`;
+    }
+  }
+
+  onMontantEditChange(): void {
+    this.warnEdit = '';
+    const restantAvecEdit = this.montantRestant + (this.depenseEnEdit?.montant ?? 0);
+    const m = this.editMontant;
+    if (m && m > 0 && m > this.seuilJournalier) {
+      this.warnEdit = `Ce montant dépasse votre seuil journalier de ${this.seuilJournalier.toFixed(2)} DT.`;
+    }
+    // Réinitialiser l'erreur si le montant redevient valide
+    if (m && m <= restantAvecEdit) this.erreurEdit = '';
   }
 
   // ── Ajouter ───────────────────────────────────────────────────
   ajouterDepense(): void {
     this.erreurForm = '';
-    if (!this.nouvelleDepense.description.trim()) { this.erreurForm = 'La description est requise.'; return; }
-    if (!this.nouvelleDepense.montant || this.nouvelleDepense.montant <= 0) { this.erreurForm = 'Le montant doit être positif.'; return; }
+    const m = this.nouvelleDepense.montant;
+
+    if (!this.nouvelleDepense.description.trim()) {
+      this.erreurForm = 'La description est requise.'; return;
+    }
+    if (!m || m <= 0) {
+      this.erreurForm = 'Le montant doit être positif.'; return;
+    }
+    if (m > this.montantRestant) {
+      this.erreurForm = `Dépassement — il vous reste ${this.montantRestant.toFixed(2)} DT dans cette catégorie.`; return;
+    }
 
     this.ajoutEnCours = true;
     const dep: Depense = {
       description: this.nouvelleDepense.description.trim(),
-      montant:     this.nouvelleDepense.montant,
-      date:        this.todayStr,  // toujours aujourd'hui
+      montant:     m,
+      date:        this.todayStr,
       estImprevue: false,
       periodeId:   this.periodeId,
       categorieId: this.categorieId,
@@ -140,7 +201,8 @@ export class CategorieDetail implements OnInit {
     this.periodeService.addDepense(dep).subscribe({
       next: d => {
         this.depenses.unshift(d);
-        this.nouvelleDepense = { description: '', montant: null, date: this.todayStr };
+        this.nouvelleDepense = { description: '', montant: null };
+        this.warnForm        = '';
         this.ajoutEnCours    = false;
         this.afficherSucces('Dépense enregistrée.');
       },
@@ -148,44 +210,83 @@ export class CategorieDetail implements OnInit {
     });
   }
 
-  // ── Éditer ────────────────────────────────────────────────────
+  // ── Édition inline ────────────────────────────────────────────
   ouvrirEdit(dep: Depense): void {
+    console.log('EDIT CLICKED', dep.id);
     if (!this.estEditable(dep)) return;
-    this.depenseEnEdit  = dep;
+    this.depenseEnEdit   = dep;
     this.editDescription = dep.description;
     this.editMontant     = dep.montant;
+    this.erreurEdit      = '';
+    this.warnEdit        = '';
   }
 
   annulerEdit(): void {
     this.depenseEnEdit = null;
+    this.erreurEdit    = '';
+    this.warnEdit      = '';
   }
 
-  sauvegarderEdit(): void {
-    if (!this.depenseEnEdit) return;
-    if (!this.editDescription.trim()) return;
-    if (!this.editMontant || this.editMontant <= 0) return;
+sauvegarderEdit(): void {
+  this.erreurEdit = '';
+  this.warnEdit = '';
 
-    const updated: Depense = {
-      ...this.depenseEnEdit,
-      description: this.editDescription.trim(),
-      montant:     this.editMontant,
-    };
+  if (!this.depenseEnEdit) return;
 
-    if (!updated.id) {
-      this.erreurForm = 'Impossible de modifier : identifiant de dépense manquant.';
-      return;
+  const desc = this.editDescription?.trim();
+  const montant = this.editMontant;
+
+  if (!desc) {
+    this.erreurEdit = 'La description est requise.';
+    return;
+  }
+
+  if (montant == null || montant <= 0) {
+    this.erreurEdit = 'Le montant doit être supérieur à 0.';
+    return;
+  }
+
+  // budget total dispo (en tenant compte ancien montant)
+  const restantAvecEdit =
+    this.montantRestant + this.depenseEnEdit.montant;
+
+  // ❌ dépasse budget total
+  if (montant > restantAvecEdit) {
+    this.erreurEdit =
+      `Dépassement du budget disponible (${restantAvecEdit.toFixed(2)} DT).`;
+    return;
+  }
+
+  // ⚠️ dépasse seuil journalier
+  if (montant > this.seuilJournalier) {
+    this.warnEdit =
+      `Attention : ce montant dépasse le seuil journalier (${this.seuilJournalier.toFixed(2)} DT).`;
+  }
+
+  const updated: Depense = {
+    ...this.depenseEnEdit,
+    description: desc,
+    montant: montant
+  };
+
+  this.periodeService.updateDepense(updated).subscribe({
+    next: d => {
+      const idx = this.depenses.findIndex(x => x.id === d.id);
+      if (idx !== -1) this.depenses[idx] = {
+        ...d,
+        editable: this.estEditable(d)
+      };
+
+      this.depenseEnEdit = null;
+      this.erreurEdit = '';
+      this.warnEdit = '';
+      this.afficherSucces('Dépense modifiée.');
+    },
+    error: () => {
+      this.erreurEdit = 'Erreur lors de la modification.';
     }
-
-    this.periodeService.updateDepense(updated).subscribe({
-      next: d => {
-        const idx = this.depenses.findIndex(x => x.id === d.id);
-        if (idx !== -1) this.depenses[idx] = d;
-        this.depenseEnEdit = null;
-        this.afficherSucces('Dépense modifiée.');
-      },
-      error: () => { this.erreurForm = 'Erreur lors de la modification.'; }
-    });
-  }
+  });
+}
 
   // ── Supprimer ─────────────────────────────────────────────────
   supprimerDepense(id: number | string): void {

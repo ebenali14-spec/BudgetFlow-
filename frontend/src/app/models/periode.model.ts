@@ -14,6 +14,7 @@ export interface Depense {
   estImprevue: boolean;
   periodeId: number | string;
   categorieId: string;
+    editable?: boolean;
 }
 
 export interface PeriodeBudgetaire {

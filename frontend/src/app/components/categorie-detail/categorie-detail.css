@@ -1,9 +1,9 @@
 :host {
-  --bg:       #f5f3ef;
+  --bg:       #ffffff;
   --surface:  #ffffff;
-  --border:   #e2dfd8;
+  --border:   #d9d0bb;
   --text:     #1a1917;
-  --muted:    #8a8780;
+  --muted:    #302303;
   --navy:     #1e3a5f;
   --accent:   #2d6a4f;
   --accent-l: #e8f4f0;
@@ -240,3 +240,72 @@
   border-radius: 50%; animation: spin 0.7s linear infinite; display: inline-block;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
+/* ── ALERT WARN ── */
+.bcd-alert-warn {
+  background: var(--warn-l); border: 1px solid #f0d9b0; color: var(--warn);
+  font-size: 0.8rem; font-weight: 500; padding: 9px 13px; border-radius: 9px;
+  display: flex; align-items: center; gap: 7px;
+}
+.bcd-dep-action {
+  display: inline-block !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+.bcd-btn-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+
+  font-size: 0.72rem;
+  font-weight: 700;
+
+  padding: 6px 10px;
+  border-radius: 8px;
+
+  border: 1.5px solid var(--border);
+  background: var(--surface);
+
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  color: var(--muted);
+}
+
+/* hover général */
+.bcd-btn-action:hover {
+  transform: translateY(-1px);
+}
+
+/* EDIT */
+.bcd-btn-action.edit {
+  border-color: #cfd8e3;
+}
+
+.bcd-btn-action.edit:hover {
+  background: #eef2f7;
+  color: var(--navy);
+  border-color: var(--navy);
+}
+
+/* DELETE */
+.bcd-btn-action.delete {
+  border-color: #f0c0bc;
+}
+
+.bcd-btn-action.delete:hover {
+  background: var(--danger-l);
+  color: var(--danger);
+  border-color: var(--danger);
+}
+/* ── EDIT HINT ── */
+.bcd-edit-hint {
+  font-size: 0.68rem; color: var(--muted);
+  display: flex; align-items: center; gap: 5px;
+  margin-bottom: 0.7rem; flex-wrap: wrap;
+}
+.bcd-edit-hint strong { color: var(--text); }
+.bcd-dep-action {
+  display: inline-flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
