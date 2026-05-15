@@ -30,7 +30,7 @@ interface LigneRepartition {
 })
 export class PeriodeCreate implements OnInit {
   userId = 1;
-  profil = 'ETUDIANT';
+  profil = 'PARENT';
 
   form = {
     dateDebut:   '',

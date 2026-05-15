@@ -119,25 +119,129 @@
 
         @if (!cat.exclue) {
 
-          <!-- ── Catégorie DEFAULT : sa propre question + ses options ── -->
-          @if (cat.estParDefaut && questionsDefault[cat.id]) {
-            <div class="bf-question">
-              <div class="bf-question-label">
-                {{ questionsDefault[cat.id].label }}
-              </div>
-              <div class="bf-options-row">
-                @for (opt of questionsDefault[cat.id].options; track opt.value) {
-                  <label class="bf-opt-btn" [class.selected]="cat.reponse === opt.value">
-                    <input type="radio"
-                           [name]="'q_' + cat.id"
-                           [value]="opt.value"
-                           [(ngModel)]="cat.reponse"
-                           (change)="onReponseChange()" />
-                    {{ opt.label }}
+          <!-- ── Catégorie DEFAULT ── -->
+          @if (cat.estParDefaut) {
+
+            <!-- LOGEMENT -->
+            @if (cat.id === 'LOGEMENT') {
+              <div class="bf-question">
+                <div class="bf-question-label">Votre situation de logement ?</div>
+                <div class="bf-options-row">
+                  <label class="bf-opt-btn" [class.selected]="cat.reponse === 'PROPRIETAIRE'">
+                    <input type="radio" [name]="'q_' + cat.id" value="PROPRIETAIRE"
+                           [(ngModel)]="cat.reponse" (change)="onReponseChange()" />
+                    Propriétaire
                   </label>
-                }
+                  <label class="bf-opt-btn" [class.selected]="cat.reponse === 'LOCATAIRE'">
+                    <input type="radio" [name]="'q_' + cat.id" value="LOCATAIRE"
+                           [(ngModel)]="cat.reponse" (change)="onReponseChange()" />
+                    Locataire
+                  </label>
+                  <label class="bf-opt-btn" [class.selected]="cat.reponse === 'COLOCATION'">
+                    <input type="radio" [name]="'q_' + cat.id" value="COLOCATION"
+                           [(ngModel)]="cat.reponse" (change)="onReponseChange()" />
+                    Colocation
+                  </label>
+                </div>
               </div>
-            </div>
+            }
+
+            <!-- TRANSPORT -->
+            @if (cat.id === 'TRANSPORT') {
+              <div class="bf-question">
+                <div class="bf-question-label">Votre moyen de transport principal ?</div>
+                <div class="bf-options-row">
+                  <label class="bf-opt-btn" [class.selected]="cat.reponse === 'VOITURE'">
+                    <input type="radio" [name]="'q_' + cat.id" value="VOITURE"
+                           [(ngModel)]="cat.reponse" (change)="onReponseChange()" />
+                    Voiture
+                  </label>
+                  <label class="bf-opt-btn" [class.selected]="cat.reponse === 'TRANSPORT_COMMUN'">
+                    <input type="radio" [name]="'q_' + cat.id" value="TRANSPORT_COMMUN"
+                           [(ngModel)]="cat.reponse" (change)="onReponseChange()" />
+                    Transports en commun
+                  </label>
+                  <label class="bf-opt-btn" [class.selected]="cat.reponse === 'VELO'">
+                    <input type="radio" [name]="'q_' + cat.id" value="VELO"
+                           [(ngModel)]="cat.reponse" (change)="onReponseChange()" />
+                    Vélo / Marche
+                  </label>
+                </div>
+              </div>
+            }
+
+            <!-- ALIMENTATION -->
+            @if (cat.id === 'ALIMENTATION') {
+              <div class="bf-question">
+                <div class="bf-question-label">Vos habitudes alimentaires ?</div>
+                <div class="bf-options-row">
+                  <label class="bf-opt-btn" [class.selected]="cat.reponse === 'CUISINE'">
+                    <input type="radio" [name]="'q_' + cat.id" value="CUISINE"
+                           [(ngModel)]="cat.reponse" (change)="onReponseChange()" />
+                    Je cuisine
+                  </label>
+                  <label class="bf-opt-btn" [class.selected]="cat.reponse === 'MIXTE'">
+                    <input type="radio" [name]="'q_' + cat.id" value="MIXTE"
+                           [(ngModel)]="cat.reponse" (change)="onReponseChange()" />
+                    Mixte
+                  </label>
+                  <label class="bf-opt-btn" [class.selected]="cat.reponse === 'RESTAURANT'">
+                    <input type="radio" [name]="'q_' + cat.id" value="RESTAURANT"
+                           [(ngModel)]="cat.reponse" (change)="onReponseChange()" />
+                    Restaurant
+                  </label>
+                </div>
+              </div>
+            }
+
+            <!-- LOISIRS -->
+            @if (cat.id === 'LOISIRS') {
+              <div class="bf-question">
+                <div class="bf-question-label">Vos dépenses en loisirs ?</div>
+                <div class="bf-options-row">
+                  <label class="bf-opt-btn" [class.selected]="cat.reponse === 'PEU'">
+                    <input type="radio" [name]="'q_' + cat.id" value="PEU"
+                           [(ngModel)]="cat.reponse" (change)="onReponseChange()" />
+                    Peu
+                  </label>
+                  <label class="bf-opt-btn" [class.selected]="cat.reponse === 'MODERE'">
+                    <input type="radio" [name]="'q_' + cat.id" value="MODERE"
+                           [(ngModel)]="cat.reponse" (change)="onReponseChange()" />
+                    Modéré
+                  </label>
+                  <label class="bf-opt-btn" [class.selected]="cat.reponse === 'BEAUCOUP'">
+                    <input type="radio" [name]="'q_' + cat.id" value="BEAUCOUP"
+                           [(ngModel)]="cat.reponse" (change)="onReponseChange()" />
+                    Beaucoup
+                  </label>
+                </div>
+              </div>
+            }
+
+            <!-- SANTE -->
+            @if (cat.id === 'SANTE') {
+              <div class="bf-question">
+                <div class="bf-question-label">Vos dépenses de santé ?</div>
+                <div class="bf-options-row">
+                  <label class="bf-opt-btn" [class.selected]="cat.reponse === 'BONNE'">
+                    <input type="radio" [name]="'q_' + cat.id" value="BONNE"
+                           [(ngModel)]="cat.reponse" (change)="onReponseChange()" />
+                    Bonne santé
+                  </label>
+                  <label class="bf-opt-btn" [class.selected]="cat.reponse === 'COURANTE'">
+                    <input type="radio" [name]="'q_' + cat.id" value="COURANTE"
+                           [(ngModel)]="cat.reponse" (change)="onReponseChange()" />
+                    Courante
+                  </label>
+                  <label class="bf-opt-btn" [class.selected]="cat.reponse === 'ELEVEE'">
+                    <input type="radio" [name]="'q_' + cat.id" value="ELEVEE"
+                           [(ngModel)]="cat.reponse" (change)="onReponseChange()" />
+                    Élevée
+                  </label>
+                </div>
+              </div>
+            }
+
           }
 
           <!-- ── Catégorie PERSO : 3 questions ── -->
@@ -147,16 +251,21 @@
                 À quelle fréquence dépensez-vous dans cette catégorie ?
               </div>
               <div class="bf-options-row">
-                @for (opt of optionsFrequence; track opt.value) {
-                  <label class="bf-opt-btn" [class.selected]="cat.frequence === opt.value">
-                    <input type="radio"
-                           [name]="'freq_' + cat.id"
-                           [value]="opt.value"
-                           [(ngModel)]="cat.frequence"
-                           (change)="onReponseChange()" />
-                    {{ opt.label }}
-                  </label>
-                }
+                <label class="bf-opt-btn" [class.selected]="cat.frequence === 'RAREMENT'">
+                  <input type="radio" [name]="'freq_' + cat.id" value="RAREMENT"
+                         [(ngModel)]="cat.frequence" (change)="onReponseChange()" />
+                  Rarement
+                </label>
+                <label class="bf-opt-btn" [class.selected]="cat.frequence === 'PARFOIS'">
+                  <input type="radio" [name]="'freq_' + cat.id" value="PARFOIS"
+                         [(ngModel)]="cat.frequence" (change)="onReponseChange()" />
+                  Parfois
+                </label>
+                <label class="bf-opt-btn" [class.selected]="cat.frequence === 'SOUVENT'">
+                  <input type="radio" [name]="'freq_' + cat.id" value="SOUVENT"
+                         [(ngModel)]="cat.frequence" (change)="onReponseChange()" />
+                  Souvent
+                </label>
               </div>
             </div>
 
@@ -165,34 +274,42 @@
                 Est-ce une dépense essentielle ou optionnelle ?
               </div>
               <div class="bf-options-row">
-                @for (opt of optionsEssentialite; track opt.value) {
-                  <label class="bf-opt-btn" [class.selected]="cat.essentialite === opt.value">
-                    <input type="radio"
-                           [name]="'ess_' + cat.id"
-                           [value]="opt.value"
-                           [(ngModel)]="cat.essentialite"
-                           (change)="onReponseChange()" />
-                    {{ opt.label }}
-                  </label>
-                }
+                <label class="bf-opt-btn" [class.selected]="cat.essentialite === 'OPTIONNELLE'">
+                  <input type="radio" [name]="'ess_' + cat.id" value="OPTIONNELLE"
+                         [(ngModel)]="cat.essentialite" (change)="onReponseChange()" />
+                  Optionnelle
+                </label>
+                <label class="bf-opt-btn" [class.selected]="cat.essentialite === 'UTILE'">
+                  <input type="radio" [name]="'ess_' + cat.id" value="UTILE"
+                         [(ngModel)]="cat.essentialite" (change)="onReponseChange()" />
+                  Utile
+                </label>
+                <label class="bf-opt-btn" [class.selected]="cat.essentialite === 'ESSENTIELLE'">
+                  <input type="radio" [name]="'ess_' + cat.id" value="ESSENTIELLE"
+                         [(ngModel)]="cat.essentialite" (change)="onReponseChange()" />
+                  Essentielle
+                </label>
               </div>
             </div>
 
             <div class="bf-question">
-              <div class="bf-question-label">
-                Quel montant mensuel estimez-vous ?
-              </div>
+              <div class="bf-question-label">Quel montant mensuel estimez-vous ?</div>
               <div class="bf-options-row">
-                @for (opt of optionsMontant; track opt.value) {
-                  <label class="bf-opt-btn" [class.selected]="cat.montant === opt.value">
-                    <input type="radio"
-                           [name]="'montant_' + cat.id"
-                           [value]="opt.value"
-                           [(ngModel)]="cat.montant"
-                           (change)="onReponseChange()" />
-                    {{ opt.label }}
-                  </label>
-                }
+                <label class="bf-opt-btn" [class.selected]="cat.montant === 'FAIBLE'">
+                  <input type="radio" [name]="'montant_' + cat.id" value="FAIBLE"
+                         [(ngModel)]="cat.montant" (change)="onReponseChange()" />
+                  Faible (&lt; 50 DT)
+                </label>
+                <label class="bf-opt-btn" [class.selected]="cat.montant === 'MOYEN'">
+                  <input type="radio" [name]="'montant_' + cat.id" value="MOYEN"
+                         [(ngModel)]="cat.montant" (change)="onReponseChange()" />
+                  Moyen (50–150 DT)
+                </label>
+                <label class="bf-opt-btn" [class.selected]="cat.montant === 'ELEVE'">
+                  <input type="radio" [name]="'montant_' + cat.id" value="ELEVE"
+                         [(ngModel)]="cat.montant" (change)="onReponseChange()" />
+                  Élevé (&gt; 150 DT)
+                </label>
               </div>
             </div>
           }
@@ -232,15 +349,18 @@
             À quelle fréquence dépensez-vous dans cette catégorie ?
           </div>
           <div class="bf-options-row">
-            @for (opt of optionsFrequence; track opt.value) {
-              <label class="bf-opt-btn"
-                     [class.selected]="nouvelleCategorie.frequence === opt.value">
-                <input type="radio" name="new_freq"
-                       [value]="opt.value"
-                       [(ngModel)]="nouvelleCategorie.frequence" />
-                {{ opt.label }}
-              </label>
-            }
+            <label class="bf-opt-btn" [class.selected]="nouvelleCategorie.frequence === 'RAREMENT'">
+              <input type="radio" name="new_freq" value="RAREMENT"
+                     [(ngModel)]="nouvelleCategorie.frequence" /> Rarement
+            </label>
+            <label class="bf-opt-btn" [class.selected]="nouvelleCategorie.frequence === 'PARFOIS'">
+              <input type="radio" name="new_freq" value="PARFOIS"
+                     [(ngModel)]="nouvelleCategorie.frequence" /> Parfois
+            </label>
+            <label class="bf-opt-btn" [class.selected]="nouvelleCategorie.frequence === 'SOUVENT'">
+              <input type="radio" name="new_freq" value="SOUVENT"
+                     [(ngModel)]="nouvelleCategorie.frequence" /> Souvent
+            </label>
           </div>
         </div>
 
@@ -249,30 +369,36 @@
             Est-ce une dépense essentielle ou optionnelle ?
           </div>
           <div class="bf-options-row">
-            @for (opt of optionsEssentialite; track opt.value) {
-              <label class="bf-opt-btn"
-                     [class.selected]="nouvelleCategorie.essentialite === opt.value">
-                <input type="radio" name="new_ess"
-                       [value]="opt.value"
-                       [(ngModel)]="nouvelleCategorie.essentialite" />
-                {{ opt.label }}
-              </label>
-            }
+            <label class="bf-opt-btn" [class.selected]="nouvelleCategorie.essentialite === 'OPTIONNELLE'">
+              <input type="radio" name="new_ess" value="OPTIONNELLE"
+                     [(ngModel)]="nouvelleCategorie.essentialite" /> Optionnelle
+            </label>
+            <label class="bf-opt-btn" [class.selected]="nouvelleCategorie.essentialite === 'UTILE'">
+              <input type="radio" name="new_ess" value="UTILE"
+                     [(ngModel)]="nouvelleCategorie.essentialite" /> Utile
+            </label>
+            <label class="bf-opt-btn" [class.selected]="nouvelleCategorie.essentialite === 'ESSENTIELLE'">
+              <input type="radio" name="new_ess" value="ESSENTIELLE"
+                     [(ngModel)]="nouvelleCategorie.essentialite" /> Essentielle
+            </label>
           </div>
         </div>
 
         <div class="bf-question">
           <div class="bf-question-label">Quel montant mensuel estimez-vous ?</div>
           <div class="bf-options-row">
-            @for (opt of optionsMontant; track opt.value) {
-              <label class="bf-opt-btn"
-                     [class.selected]="nouvelleCategorie.montant === opt.value">
-                <input type="radio" name="new_montant"
-                       [value]="opt.value"
-                       [(ngModel)]="nouvelleCategorie.montant" />
-                {{ opt.label }}
-              </label>
-            }
+            <label class="bf-opt-btn" [class.selected]="nouvelleCategorie.montant === 'FAIBLE'">
+              <input type="radio" name="new_montant" value="FAIBLE"
+                     [(ngModel)]="nouvelleCategorie.montant" /> Faible (&lt; 50 DT)
+            </label>
+            <label class="bf-opt-btn" [class.selected]="nouvelleCategorie.montant === 'MOYEN'">
+              <input type="radio" name="new_montant" value="MOYEN"
+                     [(ngModel)]="nouvelleCategorie.montant" /> Moyen (50–150 DT)
+            </label>
+            <label class="bf-opt-btn" [class.selected]="nouvelleCategorie.montant === 'ELEVE'">
+              <input type="radio" name="new_montant" value="ELEVE"
+                     [(ngModel)]="nouvelleCategorie.montant" /> Élevé (&gt; 150 DT)
+            </label>
           </div>
         </div>
 
